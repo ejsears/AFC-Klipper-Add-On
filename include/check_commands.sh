@@ -70,7 +70,7 @@ check_for_hh() {
   # If "Happy Hare" is found, it prints an error message and exits with status 1.
   # This is because AFC is not compatible with the "Happy Hare" extension.
 
-  local file_path="${klipper_dir}/klippy/extras/mmu.py"
+  local file_path="${klipper_dir}/klippy/extras/mmu/mmu.py"
   local search_text="Happy Hare"
 
   if [ -f "$file_path" ]; then
