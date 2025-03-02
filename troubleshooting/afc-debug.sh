@@ -7,7 +7,6 @@ set -euo pipefail
 # Thanks to @Esoterical, @bolliostu, and @dormouse for contributions to the original source / inspiration for this script
 # at https://github.com/Esoterical/voron_canbus/blob/main/troubleshooting/debugging/can_debug.sh
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 printer_log_dir="$HOME/printer_data/logs"
 printer_config_dir="$HOME/printer_data/config"
