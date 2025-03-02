@@ -186,7 +186,7 @@ echo "Please review the script if you have concerns about its contents."
 echo "Klipper will be stopped during this process — do not run this while printing."
 echo ""
 
-read -p "Do you wish to continue? [y/n]: " yn
+read -p "Do you wish to continue? [y/n]: " yn < /dev/tty
 case $yn in
 	[Yy]*) ;;
 	[Nn]*) exit ;;
