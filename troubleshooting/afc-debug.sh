@@ -231,7 +231,6 @@ KERNEL=$(uname -a)
 UPTIME=$(uptime)
 LSUSB=$(lsusb | tr -d '\0')
 SERIAL_IDS=$(ls -l /dev/serial/by-id/)
-CAN_IDS=$("$klipper_venv"/python "$klipper_dir"/scripts/canbus_query.py can0)
 
 get_afc_version
 get_klipper_version
@@ -261,15 +260,12 @@ log_can_interfaces
   fi
 } >> "$temp_log"
 
-#append_file_to_log "AFC.cfg file" "${afc_file}"
-#append_file_to_log "AFC_Hardware.cfg file" "${afc_config_dir}/AFC_Hardware.cfg"
-#append_file_to_log "AFC_Turtle_1.cfg file" "${afc_config_dir}/AFC_Turtle_1.cfg"
-#append_file_to_log "AFC_Macro_Vars.cfg file" "${afc_config_dir}/AFC_Macro_Vars.cfg"
+# Let's get all the AFC config files
 find "$afc_config_dir" -type f | while read -r file; do
-    # Extract just the filename for the section header
     file_name=$(basename "$file")
     append_file_to_log "$file_name" "$file"
 done
+
 
 uploaded_files=()
 
