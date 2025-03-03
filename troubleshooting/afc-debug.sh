@@ -261,10 +261,15 @@ log_can_interfaces
   fi
 } >> "$temp_log"
 
-append_file_to_log "AFC.cfg file" "${afc_file}"
-append_file_to_log "AFC_Hardware.cfg file" "${afc_config_dir}/AFC_Hardware.cfg"
-append_file_to_log "AFC_Turtle_1.cfg file" "${afc_config_dir}/AFC_Turtle_1.cfg"
-append_file_to_log "AFC_Macro_Vars.cfg file" "${afc_config_dir}/AFC_Macro_Vars.cfg"
+#append_file_to_log "AFC.cfg file" "${afc_file}"
+#append_file_to_log "AFC_Hardware.cfg file" "${afc_config_dir}/AFC_Hardware.cfg"
+#append_file_to_log "AFC_Turtle_1.cfg file" "${afc_config_dir}/AFC_Turtle_1.cfg"
+#append_file_to_log "AFC_Macro_Vars.cfg file" "${afc_config_dir}/AFC_Macro_Vars.cfg"
+find "$afc_config_dir" -type f | while read -r file; do
+    # Extract just the filename for the section header
+    file_name=$(basename "$file")
+    append_file_to_log "$file_name" "$file"
+done
 
 uploaded_files=()
 
