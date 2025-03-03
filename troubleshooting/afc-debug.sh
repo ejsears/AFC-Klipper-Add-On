@@ -21,6 +21,32 @@ temp_log=""
 afc_version="Unknown"
 klipper_version="Unknown"
 
+ALL_CAN_IDS=()
+
+log_can_interfaces() {
+    local interfaces
+    interfaces=$(ip -br link show | awk '{print $1}' ) # Lets get all the network interfaces in case someone named a CAN interface something weird
+    if [[ -z "$interfaces" ]]; then
+        echo "No CAN interfaces found."
+        return
+    fi
+    echo "Querying CAN devices..."
+    for iface in $interfaces; do
+        local can_output
+        if ! can_output=$("$klipper_venv"/python "$klipper_dir"/scripts/canbus_query.py "$iface" 2>&1); then
+            continue
+        fi
+        # Split output into lines, then prepend each with the interface name and store
+        ALL_CAN_IDS+=("Interface: $iface")
+        while IFS= read -r line; do
+            ALL_CAN_IDS+=("$line")
+        done <<< "$can_output"
+        ALL_CAN_IDS+=("")
+    done
+}
+
+
+
 is_klipper_running_systemd() {
     if systemctl list-units --type=service | grep -q klipper; then
         systemctl is-active --quiet klipper
@@ -209,6 +235,7 @@ CAN_IDS=$("$klipper_venv"/python "$klipper_dir"/scripts/canbus_query.py can0)
 
 get_afc_version
 get_klipper_version
+log_can_interfaces
 
 {
 	prepout "System Information" \
@@ -227,7 +254,11 @@ get_klipper_version
 	echo "$SERIAL_IDS"
 
 	prepout "CAN Bus IDs"
-	echo "$CAN_IDS"
+  if [ ${#ALL_CAN_IDS[@]} -eq 0 ]; then
+      echo "No CAN devices found."
+  else
+      printf "%s\n" "${ALL_CAN_IDS[@]}"
+  fi
 } >> "$temp_log"
 
 append_file_to_log "AFC.cfg file" "${afc_file}"
