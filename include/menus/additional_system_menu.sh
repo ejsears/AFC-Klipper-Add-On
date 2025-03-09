@@ -5,10 +5,15 @@
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
 
-install_menu() {
+additional_system_menu() {
   local message
   local choice
   local counter
+  message="This menu allows you to add ADDITIONAL unit types. It should NOT be used for your first unit.\n"
+  message+="This is a best effort in adding an additional unit. You will probably be required\n"
+  message+="to manually edit the configuration files to ensure proper operation.\n"
+  # Override the default boxturtle_name to prevent conflicts with the default name.
+  boxturtle_name="Turtle_2"
   counter=0
   while true; do
     clear
@@ -41,25 +46,8 @@ install_menu() {
     printf "%b▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀%b \n" "$MENU_GREEN" "$RESET"
     if [ "$files_updated_or_installed" == "False" ]; then
       printf "T. Installation Type: %s \n" "$installation_type"
-      printf "1. Add the AFC includes to the your printer.cfg automatically? : %s \n" "$afc_includes"
-      printf "2. Enable tip-forming? : %s \n" "$tip_forming"
-      printf "3. Enable a toolhead cutter? : %s \n" "$toolhead_cutter"
-      printf "4. Enable a hub cutter? : %s \n" "$hub_cutter"
-      printf "5. Enable the kick macro? : %s \n" "$kick_macro"
-      printf "6. Enable Park Macro? : %s \n" "$park_macro"
-      printf "7. Enable Poop Macro? : %s \n" "$poop_macro"
-      printf "8. Enable Wipe Macro? : %s \n" "$wipe_macro"
-      printf "9. Use a toolhead sensor or ramming with a TN/TN2 buffer? : %s \n" "$toolhead_sensor"
-      if [ "$toolhead_sensor" == "Sensor" ]; then
-        if [ "$toolhead_sensor_pin" == "Unknown" ]; then
-          printf "A. Toolhead sensor pin: ${RED}%s${RESET} \n" "$toolhead_sensor_pin"
-        else
-          printf "A. Toolhead sensor pin: %s \n" "$toolhead_sensor_pin"
-        fi
-      fi
-      printf "B. Buffer type: %s \n" "$buffer_type"
       if [ "$installation_type" == "BoxTurtle (4-Lane)" ] || [ "$installation_type" == "BoxTurtle (8-Lane)" ]; then
-        printf "C. BoxTurtle Name: %s \n" "$boxturtle_name"
+        printf "1. BoxTurtle Name: %s \n" "$boxturtle_name"
       fi
     fi
     echo ""
@@ -85,61 +73,13 @@ install_menu() {
         message="Installation Type: $installation_type"
         export message ;;
       1)
-        afc_includes=$([ "$afc_includes" == "True" ] && echo "False" || echo "True")
-        message="AFC Includes $([ "$afc_includes" == "True" ] && echo "Enabled" || echo "Disabled")"
-        export message ;;
-      2)
-        tip_forming=$([ "$tip_forming" == "True" ] && echo "False" || echo "True")
-        message="Tip Forming $([ "$tip_forming" == "True" ] && echo "Enabled" || echo "Disabled")"
-        export message ;;
-      3)
-        toolhead_cutter=$([ "$toolhead_cutter" == "True" ] && echo "False" || echo "True")
-        message="Toolhead Cutter $([ "$toolhead_cutter" == "True" ] && echo "Enabled" || echo "Disabled")"
-        export message ;;
-      4)
-        hub_cutter=$([ "$hub_cutter" == "True" ] && echo "False" || echo "True")
-        message="Hub Cutter $([ "$hub_cutter" == "True" ] && echo "Enabled" || echo "Disabled")"
-        export message ;;
-      5)
-        kick_macro=$([ "$kick_macro" == "True" ] && echo "False" || echo "True")
-        message="Kick Macro $([ "$kick_macro" == "True" ] && echo "Enabled" || echo "Disabled")"
-        export message ;;
-      6)
-        park_macro=$([ "$park_macro" == "True" ] && echo "False" || echo "True")
-        message="Park Macro $([ "$park_macro" == "True" ] && echo "Enabled" || echo "Disabled")"
-        export message ;;
-      7)
-        poop_macro=$([ "$poop_macro" == "True" ] && echo "False" || echo "True")
-        message="Poop Macro $([ "$poop_macro" == "True" ] && echo "Enabled" || echo "Disabled")"
-        export message ;;
-      8)
-        wipe_macro=$([ "$wipe_macro" == "True" ] && echo "False" || echo "True")
-        message="Wipe Macro $([ "$wipe_macro" == "True" ] && echo "Enabled" || echo "Disabled")"
-        export message ;;
-      9)
-        toolhead_sensor=$([ "$toolhead_sensor" == "Sensor" ] && echo "Ramming" || echo "Sensor")
-        message=$([ "$toolhead_sensor" == "Sensor" ] && echo "Using toolhead sensor" || echo "Using ramming with a TN/TN2 buffer")
-        export message ;;
-      A)
-        read -p "Enter toolhead sensor pin (Example: nhk:gpio13): " toolhead_sensor_pin
-        message="Toolhead sensor pin set to $toolhead_sensor_pin"
-        export message ;;
-      B)
-        buffer_type=$(
-          case "$buffer_type" in
-            "TurtleNeck") echo "TurtleNeckV2" ;;
-            "TurtleNeckV2") echo "None" ;;
-            "None" | *) echo "TurtleNeck" ;;
-          esac
-        )
-        message="Buffer Type: $buffer_type"
-        export message ;;
-      C)
-        name_unit
+        name_additional_unit
         export message ;;
       Q) exit_afc_install ;;
       M) main_menu ;;
-      I) install_afc ;;
+      I)
+        verify_name_not_in_use ${boxturtle_name}
+        install_additional_unit ;;
       *) echo "Invalid selection" ;;
     esac
   done
