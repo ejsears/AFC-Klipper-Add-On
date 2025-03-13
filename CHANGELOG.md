@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-03-13]
+
+### Added
+- You can now install additional unit types with the `install-afc.sh` script. 
+- You can now rename existing units with the `install-afc.sh` script.
+- The `install-afc.sh` script now supports native installation of a NightOwl filament changer. Thanks to
+@thomasfjen for the work in implementing this feature.
+
+
 ## [2025-03-07]
 ### Added
 - Added error checking to spool runout, before if a error happened during unload it could keep running the print
