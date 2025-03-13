@@ -41,13 +41,16 @@ additional_system_menu() {
     printf "%b▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀%b \n" "$MENU_GREEN" "$RESET"
     printf "%b\n" "$message"
     printf "%b▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ \n" "$MENU_GREEN"
-    printf "█%b            Please review the following options to configure your system%b             █\n" "$RESET" "$MENU_GREEN"
+    printf "█%b         Please review the following options to add an additional unit type%b          █\n" "$RESET" "$MENU_GREEN"
     printf "█%b           Type a number or letter and press Enter/Return to toggle choice%b           █\n" "$RESET" "$MENU_GREEN"
     printf "%b▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀%b \n" "$MENU_GREEN" "$RESET"
     if [ "$files_updated_or_installed" == "False" ]; then
       printf "T. Installation Type: %s \n" "$installation_type"
       if [ "$installation_type" == "BoxTurtle (4-Lane)" ] || [ "$installation_type" == "BoxTurtle (8-Lane)" ]; then
         printf "1. BoxTurtle Name: %s \n" "$boxturtle_name"
+      elif [ "$installation_type" == "NightOwl" ]; then
+        boxturtle_name="NightOwl_2"
+        printf "1. NightOwl Name: %s \n" "$boxturtle_name"
       fi
     fi
     echo ""

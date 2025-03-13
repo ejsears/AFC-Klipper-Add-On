@@ -72,8 +72,6 @@ replace_unit_name() {
   local old_unit_name="$1"
   local new_unit_name="$2"
 
-  echo $afc_config_dir
-  ls -l $afc_config_dir
   find "$afc_config_dir" -type f -exec sed -i "s/$old_unit_name/$new_unit_name/g" {} +
   find "$afc_config_dir" -type f -name "AFC_${old_unit_name}.cfg" -exec mv {} "$afc_config_dir/AFC_${new_unit_name}.cfg" \;
 }
