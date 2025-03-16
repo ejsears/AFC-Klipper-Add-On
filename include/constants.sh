@@ -34,6 +34,7 @@ min_version="1.0.0"
 files_updated_or_installed="False"
 test_mode="False"
 installation_options=("BoxTurtle (4-Lane)" "NightOwl")
+invalid_name="False"
 
 # AFC default configs
 park_macro="True"

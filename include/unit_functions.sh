@@ -80,6 +80,7 @@ verify_name_not_in_use() {
   local unit_name="$1"
   if grep -qR "$unit_name" "$afc_config_dir"; then
     export message="Unit $unit_name already exists, please enter a unique unit name."
+    export invalid_name="True"
     return
   fi
 }
