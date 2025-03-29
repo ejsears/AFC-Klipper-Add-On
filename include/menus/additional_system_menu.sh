@@ -22,9 +22,9 @@ additional_system_menu() {
                           \e[49m                                    \e[m
                           \e[49m                                    \e[m
                           \e[49m                                    \e[m
-                          \e[49m            \e[38;5;3;49m▄\e[38;5;101;49m▄▄▄\e[38;5;101;48;5;101m▄▄▄\e[38;5;101;48;5;243m▄\e[38;5;101;49m▄▄▄\e[38;5;65;49m▄\e[49m            \e[m
-                          \e[49m         \e[38;5;65;49m▄▄\e[38;5;239;48;5;236m▄\e[38;5;238;48;5;240m▄\e[48;5;101m           \e[38;5;101;48;5;101m▄▄▄\e[38;5;101;49m▄\e[49m        \e[m
-                          \e[49m       \e[38;5;101;49m▄\e[38;5;101;48;5;101m▄\e[38;5;241;48;5;101m▄\e[38;5;236;48;5;241m▄\e[38;5;239;48;5;236m▄\e[38;5;242;48;5;236m▄\e[38;5;239;48;5;238m▄\e[38;5;236;48;5;241m▄\e[38;5;237;48;5;101m▄\e[38;5;59;48;5;101m▄\e[48;5;101m           \e[38;5;239;48;5;242m▄\e[38;5;236;49m▄\e[49m      \e[m
+       \e[38;5;231;48;5;16m╭───────────╮      \e[m \e[49m            \e[38;5;3;49m▄\e[38;5;101;49m▄▄▄\e[38;5;101;48;5;101m▄▄▄\e[38;5;101;48;5;243m▄\e[38;5;101;49m▄▄▄\e[38;5;65;49m▄\e[49m            \e[m
+       \e[38;5;231;48;5;16m│ Mooaaarrr │      \e[m \e[49m         \e[38;5;65;49m▄▄\e[38;5;239;48;5;236m▄\e[38;5;238;48;5;240m▄\e[48;5;101m           \e[38;5;101;48;5;101m▄▄▄\e[38;5;101;49m▄\e[49m        \e[m
+       \e[38;5;231;48;5;16m╰───────────╯      \e[m \e[49m       \e[38;5;101;49m▄\e[38;5;101;48;5;101m▄\e[38;5;241;48;5;101m▄\e[38;5;236;48;5;241m▄\e[38;5;239;48;5;236m▄\e[38;5;242;48;5;236m▄\e[38;5;239;48;5;238m▄\e[38;5;236;48;5;241m▄\e[38;5;237;48;5;101m▄\e[38;5;59;48;5;101m▄\e[48;5;101m           \e[38;5;239;48;5;242m▄\e[38;5;236;49m▄\e[49m      \e[m
                           \e[49m  \e[38;5;149;49m▄\e[38;5;149;48;5;149m▄▄▄\e[48;5;149m  \e[38;5;149;48;5;143m▄\e[38;5;149;48;5;239m▄\e[38;5;143;48;5;240m▄\e[38;5;101;48;5;101m▄\e[48;5;101m  \e[38;5;101;48;5;65m▄\e[38;5;101;48;5;59m▄\e[38;5;101;48;5;237m▄\e[38;5;59;48;5;237m▄\e[38;5;236;48;5;240m▄\e[38;5;237;48;5;101m▄\e[38;5;239;48;5;101m▄▄▄\e[38;5;238;48;5;101m▄\e[38;5;237;48;5;101m▄▄▄▄\e[38;5;236;48;5;237m▄\e[38;5;65;48;5;240m▄\e[38;5;65;48;5;242m▄\e[38;5;65;49m▄\e[49m    \e[m
                           \e[38;5;149;49m▄\e[38;5;149;48;5;149m▄▄\e[38;5;107;48;5;149m▄\e[38;5;149;48;5;149m▄\e[48;5;149m   \e[38;5;143;48;5;149m▄▄\e[48;5;149m \e[38;5;149;48;5;149m▄\e[38;5;143;48;5;101m▄\e[38;5;101;48;5;101m▄\e[48;5;101m    \e[38;5;101;48;5;242m▄\e[38;5;238;48;5;237m▄\e[38;5;239;48;5;236m▄\e[38;5;101;48;5;238m▄\e[38;5;101;48;5;239m▄▄▄▄▄▄\e[38;5;238;48;5;236m▄\e[38;5;237;48;5;242m▄\e[48;5;101m \e[38;5;101;48;5;101m▄\e[38;5;65;49m▄\e[49m   \e[m
                           \e[38;5;149;48;5;149m▄\e[48;5;149m \e[38;5;238;48;5;241m▄\e[48;5;236m \e[38;5;242;48;5;101m▄\e[48;5;149m  \e[38;5;101;48;5;101m▄\e[48;5;236m \e[38;5;236;48;5;239m▄\e[38;5;149;48;5;149m▄\e[48;5;149m  \e[38;5;149;48;5;107m▄\e[38;5;101;48;5;101m▄\e[48;5;101m    \e[38;5;238;48;5;238m▄\e[38;5;239;48;5;239m▄\e[48;5;101m       \e[38;5;101;48;5;242m▄\e[38;5;239;48;5;236m▄\e[38;5;237;48;5;241m▄\e[48;5;101m \e[38;5;65;48;5;101m▄\e[38;5;149;48;5;149m▄▄▄\e[m
@@ -78,7 +78,9 @@ fi
     if [ "$files_updated_or_installed" == "False" ]; then
       printf "T. Installation Type: %s \n" "$installation_type"
       if [ "$installation_type" == "BoxTurtle (4-Lane)" ] || [ "$installation_type" == "BoxTurtle (8-Lane)" ]; then
-        boxturtle_name="Turtle_2"
+        if [ "$turtle_renamed" != "True" ]; then
+          boxturtle_name="Turtle_2"
+        fi
         printf "1. BoxTurtle Name: %s \n" "$boxturtle_name"
       elif [ "$installation_type" == "NightOwl" ]; then
         boxturtle_name="NightOwl_2"
@@ -116,7 +118,9 @@ fi
         verify_name_not_in_use ${boxturtle_name}
         if [ "$invalid_name" == "False" ]; then
           install_additional_unit
-          message+="${boxturtle_name} created successfully, please look over config file and update lane numbers"
+          message="${boxturtle_name} created successfully, please look over config file and update lane numbers."
+          message+="\nAdditionally, please ensure any MCU connections are updated in the appropriate files (CANBus, serial, etc)"
+          message+="\nThis is not a 100% turn-key solution and will require some manual configuration based on your specific setup."
           export message
         fi
         ;;

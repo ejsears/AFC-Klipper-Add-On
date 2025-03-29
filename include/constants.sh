@@ -17,7 +17,7 @@ klipper_venv="$HOME/klippy-env/bin"
 
 # Service related constants
 klipper_service="klipper"
-moonraker_address="http://localhost"
+moonraker_address="http://localhost:7125"
 
 # Git related constants
 gitrepo="https://github.com/ejsears/AFC-Klipper-Add-On.git"

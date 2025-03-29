@@ -54,8 +54,8 @@ echo "Ensuring no conflicting software is present.."
 check_for_hh
 echo "Checking to ensure crudini and jq are present.."
 check_for_prereqs
-#check_python_version
 if [ "$test_mode" == "False" ]; then
+  check_python_version
   clone_repo
 fi
 check_existing_install

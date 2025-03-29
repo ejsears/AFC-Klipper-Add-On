@@ -113,8 +113,7 @@ is_system_service: False
 info_tags:
     desc=AFC Klipper Add On
 ```
-## Initial Startup Guide
-If this is your first time setting up a Box Turtle please follow the [initial startup guide](https://github.com/ArmoredTurtle/BoxTurtle/blob/main/Initial_Startup.md#install-the-afc-klipper-add-on)
+
 ## Mandatory Configuration Changes (All)
 
 Prior to operation, the following checks / updates **MUST** be made to your system:
@@ -278,16 +277,6 @@ If using a hub different from the stock set up `hub_clear_move_dis` under AFC un
 For additional information and the steps for manual calibration, can be found in [Calibration.md](./docs/Calibration.md)
 
 ## Troubleshooting
-
-A debug script is available to be run that can assist the Armored Turtle support team on their Discord channel. To run the script, simply use the following commands:
-
-```bash
-cd ~/AFC-Klipper-Add-On/troubleshooting
-./afc-debug.sh
-```
-
-This script will collect some basic information about your system to include Klipper logs, device information, CAN network information, and your AFC
-configuration files. This information will be uploaded to termbin.com and the resulting link can be used to share this information with the Armored Turtle team.
 
 Debug information about the respooler system can be found by visiting the following URL in your browser:
 

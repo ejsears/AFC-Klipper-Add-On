@@ -31,7 +31,8 @@ name_additional_unit() {
       echo "Invalid input. The unit name must consist of only a-z, A-Z, 0-9, -, and _ and be no more than 24 characters long."
     fi
   done
-
+  export turtle_renamed="True"
+  export boxturtle_name
   export message="Naming unit $boxturtle_name"
 }
 
@@ -89,8 +90,8 @@ install_additional_unit() {
   if [ "$installation_type" == "BoxTurtle (4-Lane)" ]; then
     cp "${afc_path}/templates/AFC_Turtle_1.cfg" "${afc_config_dir}/AFC_${boxturtle_name}.cfg"
     find "$afc_config_dir/AFC_${boxturtle_name}.cfg" -type f -exec sed -i "s/Turtle_1/$boxturtle_name/g" {} +
-    cp ${afc_path}/config/mcu/AFC_Lite.cfg ${afc_config_dir}/mcu/AFC_${boxturtle_name}_mcu.cfg
-    sed -i "s/include mcu\/AFC_Lite.cfg/include mcu\/AFC_${boxturtle_name}_mcu.cfg/g" ${afc_config_dir}/AFC_${boxturtle_name}.cfg
+    cp "${afc_path}"/config/mcu/AFC_Lite.cfg "${afc_config_dir}"/mcu/AFC_"${boxturtle_name}"_mcu.cfg
+    sed -i "s/include mcu\/AFC_Lite.cfg/include mcu\/AFC_${boxturtle_name}_mcu.cfg/g" "${afc_config_dir}"/AFC_"${boxturtle_name}".cfg
     # If we are installing a NightOwl, then copy these files over.
   elif [ "$installation_type" == "NightOwl" ]; then
     cp "${afc_path}/templates/AFC_NightOwl_1.cfg" "${afc_config_dir}/AFC_${boxturtle_name}.cfg"

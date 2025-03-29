@@ -137,6 +137,9 @@ fi
 
 message+="""
 You may now quit the script or return to the main menu.
+
+If you would like to add any additional units, please restart to script to ensure the
+current units are loaded correctly.
 """
 
 }

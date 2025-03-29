@@ -29,9 +29,8 @@ class AFC_QueueListener(QueueListener):
         logging.handlers.TimedRotatingFileHandler.doRollover(self)
 
 class AFC_logger:
-    def __init__(self, printer, afc_obj):
+    def __init__(self, printer):
         self.reactor = printer.reactor
-        self.AFC     = afc_obj
         self.gcode   = printer.lookup_object('gcode')
         self.webhooks = printer.lookup_object('webhooks')
 
@@ -85,8 +84,6 @@ class AFC_logger:
         for line in message.lstrip().rstrip().split("\n"):
             self.logger.error( self._format("ERROR: {}".format(line)))
         self.send_callback( "!! {}".format(message) )
-
-        self.AFC.message_queue.append( (message, "error") )
 
     def set_debug(self, debug ):
         self.print_debug_console = debug

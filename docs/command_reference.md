@@ -13,14 +13,6 @@ allows the option to calibrate all lanes across all units.
 Usage: ``AFC_CALIBRATION``  
 Example: ``AFC_CALIBRATION``  
 
-### AFC_LANE_RESET
-_Description_: This function resets a specified lane to the hub position in the AFC system. It checks for various error conditions,
-such as whether the toolhead is loaded or whether the hub is already clear. The function moves the lane back to the
-hub based on the specified or default distances, ensuring the lane's correct state before completing the reset.  
-  
-Usage: ``AFC_LANE_RESET LANE=<lane> DISTANCE=<distance>``  
-Example: `AFC_LANE_RESET LANE=lane1`  
-
 ### AFC_RESET
 _Description_: This function opens a prompt allowing the user to select a loaded lane for reset. It displays a list of loaded lanes
 and provides a reset button for each lane. If no lanes are loaded, an informative message is displayed indicating
@@ -90,13 +82,13 @@ several checks and movements to ensure the lane is properly loaded.
 Usage: ``HUB_LOAD LANE=<lane>``  
 Example: ``HUB_LOAD LANE=lane1``  
 
-### LANE_MOVE
-_Description_: This function handles the manual movement of a specified lane. It retrieves the lane
-specified by the 'LANE' parameter and moves it by the distance specified by the 'DISTANCE' parameter.  
-Distance's lower than 200 moves extruder at short_move_speed/accel, values above 200 move extruder at long_move_speed/accel  
+### LANE_RESET
+_Description_: This function resets a specified lane to the hub position in the AFC system. It checks for various error conditions,
+such as whether the toolhead is loaded or whether the hub is already clear. The function moves the lane back to the
+hub based on the specified or default distances, ensuring the lane's correct state before completing the reset.  
   
-Usage: ``LANE_MOVE LANE=<lane> DISTANCE=<distance>``  
-Example: ``LANE_MOVE LANE=lane1 DISTANCE=100``  
+Usage: ``LANE_RESET LANE=<lane> DISTANCE=<distance>``  
+Example: `LANE_RESET LANE=lane1`  
 
 ### LANE_UNLOAD
 _Description_: This function handles the unloading of a specified lane from the extruder. It performs
@@ -130,18 +122,6 @@ _Description_: Macro call to write tool_stn, tool_stn_unload and tool_sensor_aft
 Usage: ``SAVE_EXTRUDER_VALUES EXTRUDER=<extruder>``  
 Example: ``SAVE_EXTRUDER_VALUES EXTRUDER=extruder``  
 
-### SAVE_HUB_DIST
-_Description_: Macro call to write dist_hub variable to config file for specified lane.  
-  
-Usage: ``SAVE_HUB_DIST LANE=<lane_name>``  
-Example: ``SAVE_HUB_DIST LANE=lane1``  
-
-### SAVE_SPEED_MULTIPLIER
-_Description_: Macro call to write fwd_speed_multiplier and rwd_speed_multiplier variables to config file for specified lane.  
-  
-Usage: ``SAVE_SPEED_MULTIPLIER LANE=<lane_name>``  
-Example: ``SAVE_SPEED_MULTIPLIER LANE=lane1``  
-
 ### SET_AFC_TOOLCHANGES
 _Description_: This macro can be used to set total number of toolchanges from slicer. AFC will keep track of tool changes and print out
 current tool change number when a T(n) command is called from gcode.  
@@ -168,14 +148,6 @@ length will increase/decrease bowden length by that amount.
 Usage: ``SET_BOWDEN_LENGTH HUB=<hub> LENGTH=<length> UNLOAD_LENGTH=<length>``  
 Example: ``SET_BOWDEN_LENGTH HUB=Turtle_1 LENGTH=+100 UNLOAD_LENGTH=-100``  
 
-### SET_BUFFER_MULTIPLIER
-_Description_: This function handles the adjustment of the buffer multipliers for the turtleneck buffer.
-It retrieves the multiplier type ('HIGH' or 'LOW') and the factor to be applied. The function
-ensures that the factor is valid and updates the corresponding multiplier.  
-  
-Usage: `SET_BUFFER_MULTIPLIER BUFFER=<buffer_name> MULTIPLIER=<HIGH/LOW> FACTOR=<factor>`  
-Example: `SET_BUFFER_MULTIPLIER BUFFER=TN MULTIPLIER=HIGH FACTOR=1.2`  
-
 ### SET_BUFFER_VELOCITY
 _Description_: Allows users to tweak buffer velocity setting while printing. This setting is not
 saved in configuration. Please update your configuration file once you find a velocity that
@@ -190,14 +162,6 @@ specified by the 'LANE' parameter and sets its color to the value provided by th
   
 Usage: ``SET_COLOR LANE=<lane> COLOR=<color>``  
 Example: ``SET_COLOR LANE=lane1 COLOR=FF0000``  
-
-### SET_HUB_DIST
-_Description_: This function adjusts the distance between a lanes extruder and hub. Adding +/- in front of the length will
-increase/decrease length by that amount. To reset length back to config value, pass in `reset` for length to
-reset to value in config file.  
-  
-Usage: ``SET_HUB_DIST LANE=<lane_name> LENGTH=+/-<fwd_multiplier>``  
-Example: ``SET_HUB_DIST LANE=lane1 LENGTH=+100``  
 
 ### SET_LANE_LOADED
 _Description_: This macro handles manually setting a lane loaded into the toolhead. This is useful when manually loading lanes
@@ -221,6 +185,14 @@ specified by the 'LANE' parameter and sets its material to the value provided by
 Usage: `SET_MATERIAL LANE=<lane> MATERIAL=<material>`  
 Example: `SET_MATERIAL LANE=lane1 MATERIAL=ABS`  
 
+### SET_MULTIPLIER
+_Description_: This function handles the adjustment of the buffer multipliers for the turtleneck buffer.
+It retrieves the multiplier type ('HIGH' or 'LOW') and the factor to be applied. The function
+ensures that the factor is valid and updates the corresponding multiplier.  
+  
+Usage: `SET_BUFFER_MULTIPLIER BUFFER=<buffer_name> MULTIPLIER=<HIGH/LOW> FACTOR=<factor>`  
+Example: `SET_BUFFER_MULTIPLIER BUFFER=TN MULTIPLIER=HIGH FACTOR=1.2`  
+
 ### SET_ROTATION_FACTOR
 _Description_: Adjusts the rotation distance of the current AFC stepper motor by applying a
 specified factor. If no factor is provided, it defaults to 1.0, which resets
@@ -235,17 +207,6 @@ specified by the 'LANE' parameter and updates its the lane to use if filament ru
   
 Usage: ``SET_RUNOUT LANE=<lane> RUNOUT=<lane>``  
 Example: ``SET_RUNOUT LANE=lane1 RUNOUT=lane4``  
-
-### SET_SPEED_MULTIPLIER
-_Description_: Macro call to update fwd_speed_multiplier or rwd_speed_multiplier values without having to set in config and restart klipper. This macro allows adjusting
-these values while printing. Multiplier values must be between 0.0 - 1.0  
-    
-Use FWD variable to set forward multiplier, use RWD to set reverse multiplier  
-    
-After running this command run SAVE_SPEED_MULTIPLIER LANE=<lane_name> to save value to config file  
-  
-Usage: ``SET_SPEED_MULTIPLIER LANE=<lane_name> FWD=<fwd_multiplier> RWD=<rwd_multiplier>``  
-Example: ``SET_SPEED_MULTIPLIER LANE=lane1 RWD=0.9``  
 
 ### SET_SPOOL_ID
 _Description_: This function handles setting the spool ID for a specified lane. It retrieves the lane
@@ -348,12 +309,12 @@ Example: ``UNSET_LANE_LOADED``
 ### UPDATE_TOOLHEAD_SENSORS
 _Description_: Macro call to adjust `tool_stn`\`tool_stn_unload`\`tool_sensor_after_extruder` lengths for specified extruder without having to update config file and restart klipper.  
   
-`tool_stn length` is the length from the sensor before extruder gears (tool_start) to nozzle. If sensor after extruder gears(tool_end)
+tool_stn length is the length from the sensor before extruder gears (tool_start) to nozzle. If sensor after extruder gears(tool_end)
 is set then the value if from tool_end sensor.  
   
-`tool_stn_unload` length is the length to unload so that filament is not in extruder gears anymore.  
+tool_stn_unload length is the length to unload so that filament is not in extruder gears anymore.  
   
-`tool_sensor_after_extruder` length is mainly used for those that have a filament sensor after extruder gears, target this
+tool_sensor_after_extruder length is mainly used for those that have a filament sensor after extruder gears, target this
 length to retract filament enough so that it's not in the extruder gears anymore.  
   
 Please pause print if you need to adjust this value while printing  
@@ -368,14 +329,14 @@ These macros can be executed either from the console, called from another macro,
 the Mainsail or Fluidd web interfaces.
 
 ### BT_TOOL_UNLOAD
-_Description_: Unloads the currently loaded lane
+_Description_: Unload the currently loaded lane
 ### BT_CHANGE_TOOL
-_Description_: Switch to a new lane by ejecting the previously loaded one and then load the lane specified by LANE parameter. Lane parameter is an integer and defaults to 1. ex. `BT_CHANGE_TOOL LANE=2`
+_Description_: Switch to a new lane by ejecting the previously loaded one
 ### BT_LANE_EJECT
-_Description_: Fully eject the filament from the lane so spool can be removed. Lane parameter is an integer and defaults to 1. ex. `BT_LANE_EJECT LANE=2`
+_Description_: Fully eject the filament from the lane
 ### BT_LANE_MOVE
-_Description_: Move the specified lane the specified amount. Lane parameter is an integer and defaults to 1. Distance parameter is and integer and defaults to 20. Distance over 200 uses long load speeds. ex `BT_LANE_MOVE LANE=2 DISTANCE=100`
+_Description_: Move the specified lane the specified amount
 ### BT_RESUME
-_Description_: Resume the print after an error, using normal resume will also call AFC_RESUME
+_Description_: Resume the print after an error
 ### BT_PREP
 _Description_: Run the AFC PREP sequence
