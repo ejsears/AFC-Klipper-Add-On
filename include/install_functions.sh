@@ -63,13 +63,6 @@ copy_unit_files() {
 }
 
 install_afc() {
-  # Make sure we aren't in the middle of a print, and stop klipper
-#  if query_printer_status; then
-#    stop_service "${klipper_service}"
-#  else
-#    print_msg ERROR "It looks like you are in the middle of print. Please retry installation when not printing. Exiting."
-#    exit 1
-#  fi
   # Link the python extensions
   link_extensions
   copy_config
@@ -115,6 +108,10 @@ install_afc() {
   replace_varfile_path "${afc_config_dir}/AFC.cfg"
   update_moonraker_config
 
+  export message
+  export files_updated_or_installed="True"
+  update_afc_version "$current_install_version"
+
   # Final step should be displaying any messages and exit cleanly.
   message="""
 - AFC Configuration updated with selected options at ${afc_file}
@@ -124,12 +121,10 @@ install_afc() {
 
 if [ "$installation_type" == "BoxTurtle (4-Lane)" ] || [ "$installation_type" == "BoxTurtle (8-Lane)" ]; then
   message+="""
-
 - Ensure you enter either your CAN bus or serial information in the ${afc_config_dir}/AFC_${boxturtle_name}.cfg file
   """
 elif [ "$installation_type" == "NightOwl" ]; then
   message+="""
-
 - Ensure you enter either your CAN bus or serial information in the ${afc_config_dir}/AFC_NightOwl_1.cfg file
   """
 fi
@@ -143,6 +138,5 @@ fi
 message+="""
 You may now quit the script or return to the main menu.
 """
-  export message
-  files_updated_or_installed="True"
+
 }
