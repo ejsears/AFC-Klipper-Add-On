@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2025-03-13]
+## [2025-03-29]
 
 ### Added
 - You can now install additional unit types with the `install-afc.sh` script. 
@@ -13,6 +13,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `install-afc.sh` script now supports native installation of a NightOwl filament changer. Thanks to
 @thomasfjen for the work in implementing this feature.
 
+
+## [2025-03-17]
+### Added
+- Added `SET_SPEED_MULTIPLIER` macro to allow user to change fwd/rwd speed multipliers during prints
+- Added `SAVE_SPEED_MULTIPLIER` macro to save updated multiplier to config file for specified lane
+
+### Fixed
+- Added check to AFC pause/resume functions to make sure printer was not paused/paused before doing any actions
+- Fixed issue where macro variables were not passed from AFC_PAUSE/AFC_RESUME to PAUSE/RESUME macros if user passed in variables when calling these macros  
+
+## [2025-03-12]
+### Added
+- Virtual bypass sensor, AFC adds this sensor if hardware bypass is not detected
+
+### Fixed
+- Issue where z would move back down when calling cut macro after z hop from AFC
+
+## [2025-03-10]
+### Added
+- Reporting error messages in AFC status so they can be shown in AFC integration panel
+
+### Fixed
+- Issue where resuming position could crash into object/purge tower
+- Issue where creating filament_switch_sensor in AFC would cause klipper to error out when AFC include is before `[pause_resume]` and user has `recover_velocity` defined
+- Issue where passing in `+-<number>` for length when calling `SET_BOWDEN_LENGTH` would crash klipper 
+
+## [2025-03-07]
+### Added
+- Added variable_z_purge_move to Poop macro. Setting this to False will allow pooping with no z movement
+- Added variable_z_move to brush macro. this value will set a positive Z move at the end of the brush to move the nozzle away from the brush
+
+### Fixed
+- Fixed error that occurs when all lanes are calibrated
 
 ## [2025-03-07]
 ### Added

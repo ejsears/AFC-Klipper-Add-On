@@ -14,17 +14,16 @@ except:
     # Python 2.7 support
     from urllib2 import urlopen
 
-try:
-    from extras.AFC_logger import AFC_logger
-except:
-    raise error("Error trying to import AFC_logger, please rerun install-afc.sh script in your AFC-Klipper-Add-On directory then restart klipper")
+try: from extras.AFC_logger import AFC_logger
+except: raise error("Error trying to import AFC_logger, please rerun install-afc.sh script in your AFC-Klipper-Add-On directory then restart klipper")
 
-try:
-    from extras.AFC_functions import afcDeltaTime
-except:
-    raise error("Error trying to import afcDeltaTime, please rerun install-afc.sh script in your AFC-Klipper-Add-On directory then restart klipper")
+try: from extras.AFC_functions import afcDeltaTime
+except: raise error("Error trying to import afcDeltaTime, please rerun install-afc.sh script in your AFC-Klipper-Add-On directory then restart klipper")
 
-AFC_VERSION="1.0.0"
+try: from extras.AFC_utils import add_filament_switch
+except: raise error("Error trying to import AFC_utils, please rerun install-afc.sh script in your AFC-Klipper-Add-On directory then restart klipper")
+
+AFC_VERSION="1.0.4"
 
 # Class for holding different states so its clear what all valid states are
 class State:
@@ -46,12 +45,11 @@ class afc:
         self.reactor = self.printer.get_reactor()
         self.webhooks = self.printer.lookup_object('webhooks')
         self.printer.register_event_handler("klippy:connect",self.handle_connect)
-        self.logger  = AFC_logger(self.printer)
+        self.logger  = AFC_logger(self.printer, self)
 
         self.SPOOL      = self.printer.load_object(config,'AFC_spool')
         self.ERROR      = self.printer.load_object(config,'AFC_error')
         self.FUNCTION   = self.printer.load_object(config,'AFC_functions')
-        self.IDLE       = self.printer.load_object(config,'idle_timeout')
         self.gcode      = self.printer.lookup_object('gcode')
 
         # Registering stepper callback so that mux macro can be set properly with valid lane names
@@ -60,8 +58,6 @@ class afc:
         self.printer.register_event_handler("virtual_sdcard:reset_file",self.ERROR.reset_failure)
         # Registering webhooks endpoint for <ip_address>/printer/afc/status
         self.webhooks.register_endpoint("afc/status", self._webhooks_status)
-
-        self.gcode_move = self.printer.load_object(config, 'gcode_move')
 
         self.current        = None
         self.current_loading= None
@@ -80,6 +76,9 @@ class afc:
         self.buffers    = {}
         self.tool_cmds  = {}
         self.led_obj    = {}
+        self.bypass     = None
+        self.bypass_last_state = False
+        self.message_queue = []
         self.monitoring = False
         self.number_of_toolchanges  = 0
         self.current_toolchange     = 0
@@ -169,6 +168,8 @@ class afc:
         self.logger.set_debug( self.debug )
         self._update_trsync(config)
 
+        # Setup pin so a virtual filament sensor can be added for bypass
+        self.printer.lookup_object("pins").register_chip("afc_virtual_bypass", self)
 
         # Printing here will not display in console but it will go to klippy.log
         self.print_version()
@@ -204,6 +205,10 @@ class afc:
             except Exception as e:
                 self.logger.info("Unable to update TRSYNC_TIMEOUT: {}".format(e))
 
+    def register_config_callback(self, option):
+        # Function needed for virtual pins, does nothing
+        return
+
     def register_lane_macros(self, lane_obj):
         """
         Callback function to register macros with proper lane names so that klipper errors out correctly when users supply lanes that
@@ -222,7 +227,10 @@ class afc:
         This function is called when the printer connects. It looks up the toolhead object
         and assigns it to the instance variable `self.toolhead`.
         """
-        self.toolhead = self.printer.lookup_object('toolhead')
+        self.toolhead   = self.printer.lookup_object('toolhead')
+        self.IDLE       = self.printer.lookup_object('idle_timeout')
+        self.gcode_move = self.printer.lookup_object('gcode_move')
+
         moonraker_port = ""
         if self.moonraker_port is not None: moonraker_port = ":{}".format(self.moonraker_port)
 
@@ -232,6 +240,12 @@ class afc:
             self.spoolman = self.moonraker['result']['orig']['spoolman']['server']     # check for spoolman and grab url
         except:
             self.spoolman = None                      # set to none if not found
+
+        # Check if hardware bypass is configured, if not create a virtual bypass sensor
+        try:
+            self.bypass = self.printer.lookup_object('filament_switch_sensor bypass').runout_helper
+        except:
+            self.bypass = add_filament_switch("filament_switch_sensor virtual_bypass", "afc_virtual_bypass:virtual_bypass", self.printer ).runout_helper
 
         # GCODE REGISTERS
         self.gcode.register_command('TOOL_UNLOAD',          self.cmd_TOOL_UNLOAD,           desc=self.cmd_TOOL_UNLOAD_help)
@@ -321,9 +335,19 @@ class afc:
         :return Returns current state of bypass sensor. If bypass sensor does not exist, always returns False
         """
         bypass_state = False
+
         try:
-            bypass = self.printer.lookup_object('filament_switch_sensor bypass').runout_helper
-            bypass_state = bypass.filament_present
+            if 'virtual' in self.bypass.name:
+                bypass_state = self.bypass.sensor_enabled
+                # Update filament present to match enable button so it updates in guis
+                self.bypass.filament_present = bypass_state
+
+                if self.bypass_last_state != bypass_state:
+                    self.bypass_last_state = bypass_state
+                    self.save_vars()
+
+            else:
+                bypass_state = self.bypass.filament_present
         except:
             pass
 
@@ -455,14 +479,21 @@ class afc:
 
         :param base_pos: position to apply z amount to
         :param z_amount: amount to add to the base position
+
+        :return newpos: Position list with updated z position
         """
         max_z = self.toolhead.get_status(0)['axis_maximum'][2]
         newpos = self.toolhead.get_position()
 
         # Determine z movement, get the min value to not exceed max z movement
-        newpos[2] = min(max_z, z_amount)
+        newpos[2] = min(max_z - 1, z_amount)
 
         self.gcode_move.move_with_transform(newpos, self._get_resume_speedz())
+        # Update gcode move last position to current position
+        self.gcode_move.reset_last_position()
+        self.FUNCTION.log_toolhead_pos("_move_z_pos: ")
+
+        return newpos[2]
 
     def save_pos(self):
         """
@@ -492,13 +523,14 @@ class afc:
 
         :param move_z_first: Enable to move z before moving x,y
         """
-        msg = "Restoring Postion {}".format(self.last_toolhead_position)
+        msg = "Restoring Position {}".format(self.last_toolhead_position)
         msg += " Base position: {}".format(self.base_position)
         msg += " last_gcode_position: {}".format(self.last_gcode_position)
         msg += " homing_position: {}".format(self.homing_position)
         msg += " speed: {}".format(self.speed)
         msg += " absolute_coord: {}\n".format(self.absolute_coord)
         self.logger.debug(msg)
+        self.FUNCTION.log_toolhead_pos("Resume initial pos: ")
 
         self.current_state = State.RESTORING_POS
         newpos = self.toolhead.get_position()
@@ -506,26 +538,26 @@ class afc:
         # Restore absolute coords
         self.gcode_move.absolute_coord = self.absolute_coord
 
-        # Update GCODE STATE variables
-        self.gcode_move.base_position = self.base_position
-        self.gcode_move.last_position[:3] = self.last_gcode_position[:3]
-        self.gcode_move.homing_position = self.homing_position
-
-        # Restore the relative E position
-        e_diff = newpos[3] - self.last_gcode_position[3]
-        self.gcode_move.base_position[3] += e_diff
-
         # Move toolhead to previous z location with zhop added
         if move_z_first:
-            self._move_z_pos(self.last_gcode_position[2] + self.z_hop)
+            newpos[2] = self._move_z_pos(self.last_gcode_position[2] + self.z_hop)
 
         # Move to previous x,y location
         newpos[:2] = self.last_gcode_position[:2]
         self.gcode_move.move_with_transform(newpos, self._get_resume_speed() )
+        self.FUNCTION.log_toolhead_pos("Resume prev xy: ")
 
-        # Drop to previous z
-        newpos[2] = self.last_gcode_position[2]
-        self.gcode_move.move_with_transform(newpos, self._get_resume_speedz() )
+        # Update GCODE STATE variables
+        self.gcode_move.base_position = list(self.base_position)
+        self.gcode_move.homing_position = list(self.homing_position)
+        self.gcode_move.last_position[:3] = self.last_gcode_position[:3]
+
+        # Restore the relative E position
+        e_diff = newpos[3] - self.last_gcode_position[3]
+        self.gcode_move.base_position[3] += e_diff
+        # Return to previous xyz
+        self.gcode_move.move_with_transform(self.gcode_move.last_position, self._get_resume_speedz() )
+        self.FUNCTION.log_toolhead_pos("Resume final z: ")
         self.current_state = State.IDLE
         self.position_saved = False
 
@@ -553,6 +585,7 @@ class afc:
         str["system"]['num_lanes'] = len(self.lanes)
         str["system"]['num_extruders'] = len(self.tools)
         str["system"]["extruders"]={}
+        str["system"]["bypass"] = {"enabled": self._get_bypass_state() }
 
         for EXTRUDE in self.tools.keys():
             CUR_EXTRUDER = self.tools[EXTRUDE]
@@ -1257,6 +1290,18 @@ class afc:
             if not self.error_state and self.number_of_toolchanges != 0 and self.current_toolchange != self.number_of_toolchanges:
                 self.current_toolchange += 1
 
+    def _get_message(self):
+        """
+        Helper function to return a message from the error message queue
+        : return Dictionary in {"message":"", "type":""} format
+        """
+        message = {"message":"", "type":""}
+        try:
+            message['message'], message["type"] = self.message_queue.pop(0)
+        except IndexError:
+            pass
+        return message
+
     def get_status(self, eventtime=None):
         """
         Displays current status of AFC for webhooks
@@ -1283,6 +1328,7 @@ class afc:
         str["extruders"] = list(self.tools.keys())
         str["hubs"] = list(self.hubs.keys())
         str["buffers"] = list(self.buffers.keys())
+        str["message"] = self._get_message()
         return str
 
     def _webhooks_status(self, web_request):

@@ -75,7 +75,7 @@ class afcPrep:
         for EXTRUDER in self.AFC.tools.keys():
             PrinterObject=self.AFC.tools[EXTRUDER]
             self.AFC.tools[PrinterObject.name]=PrinterObject
-            if 'system' in units:
+            if 'system' in units and "extruders" in units["system"]:
                 # Check to see if lane_loaded is in dictionary and its its not an empty string
                 if PrinterObject.name in units["system"]["extruders"] and \
                   'lane_loaded' in units["system"]["extruders"][PrinterObject.name] and \
@@ -142,6 +142,11 @@ class afcPrep:
                 self.logger.info("Filament loaded in bypass, toolchanges deactivated")
         except:
             pass
+
+        # Restore previous bypass state if virtual bypass is active
+        if 'virtual' in self.AFC.bypass.name:
+            if "system" in units and 'bypass' in units["system"]:
+                self.AFC.bypass.sensor_enabled = units["system"]["bypass"]["enabled"]
 
         # Defaulting to no active spool, putting at end so endpoint has time to register
         if self.AFC.current is None:

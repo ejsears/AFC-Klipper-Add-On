@@ -281,8 +281,8 @@ class afcFunction:
             self.logger.info("Manually removing {} loaded from toolhead".format(cur_lane_loaded.name))
             self.AFC.save_vars()
 
-    def log_toolhead_pos(self):
-        msg = "Position: {}".format(self.AFC.toolhead.get_position())
+    def log_toolhead_pos(self, move_pre=""):
+        msg = "{}Position: {}".format(move_pre, self.AFC.toolhead.get_position())
         msg += " base_position: {}".format(self.AFC.gcode_move.base_position)
         msg += " last_position: {}".format(self.AFC.gcode_move.last_position)
         msg += " homing_position: {}".format(self.AFC.gcode_move.homing_position)
@@ -433,6 +433,9 @@ class afcFunction:
                 else:
                     # Calibrate all lanes if no specific lane is provided
                     for CUR_LANE in self.AFC.lanes.values():
+                        if not CUR_LANE.load_state or not CUR_LANE.prep_state:
+                            self.logger.info("{} not loaded skipping to next loaded lane".format(CUR_LANE.name))
+                            continue
                         # Calibrate the specific lane
                         checked, msg, pos = CUR_LANE.unit_obj.calibrate_lane(CUR_LANE, tol)
                         if(not checked):
@@ -454,6 +457,9 @@ class afcFunction:
                     self.logger.info('{}'.format(CUR_UNIT.name))
                     # Calibrate all lanes if no specific lane is provided
                     for CUR_LANE in CUR_UNIT.lanes.values():
+                        if not CUR_LANE.load_state or  not CUR_LANE.prep_state:
+                            self.logger.info("{} not loaded skipping to next loaded lane".format(CUR_LANE.name))
+                            continue
                         # Calibrate the specific lane
                         checked, msg, pos = CUR_UNIT.calibrate_lane(CUR_LANE, tol)
                         if(not checked):
@@ -498,7 +504,8 @@ class afcFunction:
                 CUR_LANE.extruder_obj.tool_start = None
 
         if checked:
-            self.AFC.gcode.run_script_from_command('AFC_CALI_COMP CALI={}'.format(calibrated))
+            lanes_calibrated = ','.join(calibrated)
+            self.AFC.gcode.run_script_from_command('AFC_CALI_COMP CALI={}'.format(lanes_calibrated))
 
     cmd_AFC_CALI_COMP_help = 'Opens prompt after calibration is complete'
     def cmd_AFC_CALI_COMP(self, gcmd):
@@ -721,28 +728,32 @@ class afcFunction:
 
         self.AFC.gcode.respond_info('{} reset to hub, take necessary action'.format(lane))
 
-    def _calc_bowden_length(self, config_length, current_length, new_length):
+    def _calc_length(self, config_length, current_length, new_length):
         """
-        Common function to calculate bowden length for afc_bowden_length and afc_unload_bowden_length
+        Common function to calculate length for afc_bowden_length, afc_unload_bowden_length, and hub_dist
 
         :param config_length: Current configuration length thats in config file
-        :param current_length: Current length for bowden
+        :param current_length: Current length for bowden or hub_dist
         :param new_length: New length to set, increase(+), decrease(-), or reset to config value
 
-        :returns bowden_length: Calculated bowden length value
+        :returns length: Calculated length value
         """
-        bowden_length = 0.0
+        length = 0.0
 
         if new_length.lower() == 'reset':
-            bowden_length = config_length
+            length = config_length
         else:
             if new_length[0] in ('+', '-'):
-                bowden_value = float(new_length)
-                bowden_length = current_length + bowden_value
+                try:
+                    bowden_value = float(new_length)
+                    length = current_length + bowden_value
+                except ValueError:
+                    length = current_length
+                    self.logger.error("Invalid length: {}".format(new_length))
             else:
-                bowden_length = float(new_length)
+                length = float(new_length)
 
-        return bowden_length
+        return length
 
     cmd_SET_BOWDEN_LENGTH_help = "Helper to dynamically set length of bowden between hub and toolhead. Pass in HUB if using multiple box turtles"
     def cmd_SET_BOWDEN_LENGTH(self, gcmd):
@@ -784,10 +795,10 @@ class afcFunction:
         cur_unload_bowden_len   = CUR_HUB.afc_unload_bowden_length
 
         if length_param is not None:
-            CUR_HUB.afc_bowden_length = self._calc_bowden_length(CUR_HUB.config_bowden_length, cur_bowden_len, length_param)
+            CUR_HUB.afc_bowden_length = self._calc_length(CUR_HUB.config_bowden_length, cur_bowden_len, length_param)
 
         if unload_length is not None:
-            CUR_HUB.afc_unload_bowden_length = self._calc_bowden_length(CUR_HUB.config_unload_bowden_length, cur_unload_bowden_len, unload_length)
+            CUR_HUB.afc_unload_bowden_length = self._calc_length(CUR_HUB.config_unload_bowden_length, cur_unload_bowden_len, unload_length)
 
         msg =  '// Hub : {}\n'.format( hub )
         msg += '// afc_bowden_length:\n'
@@ -798,7 +809,7 @@ class afcFunction:
         msg += '//   Config Bowden Length:   {}\n'.format(CUR_HUB.config_unload_bowden_length)
         msg += '//   Previous Bowden Length: {}\n'.format(cur_unload_bowden_len)
         msg += '//   New Bowden Length:      {}\n'.format(CUR_HUB.afc_unload_bowden_length)
-        msg += '\n// TO SAVE BOWDEN LENGTH afc_bowden_length MUST BE UPDATED IN AFC_Hardware.cfg for each hub if there are multiple'
+        msg += '\n// TO SAVE BOWDEN LENGTH afc_bowden_length MUST BE UPDATED IN AFC_Turtle_(n).cfg for each AFC_hub if there are multiple'
         self.logger.raw(msg)
 
     cmd_HUB_CUT_TEST_help = "Test the cutting sequence of the hub cutter, expects LANE=laneN"
