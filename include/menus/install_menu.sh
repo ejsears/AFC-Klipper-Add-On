@@ -213,6 +213,16 @@ printf "\e[48;2;222;221;218m      \e[38;2;220;219;217;48;2;222;221;218m▄\e[38;
 \e[38;2;215;215;215;48;2;219;218;214m▄▄\e[38;2;217;217;214;48;2;219;218;214m▄\e[38;2;219;217;214;48;2;219;218;214m▄▄▄\e[38;2;219;217;214;48;2;223;199;197m▄\e[38;2;219;217;214;48;2;238;138;138m▄\e[38;2;191;219;217;48;2;121;220;223m▄\e[38;2;162;220;220;48;2;92;225;230m▄\e[38;2;155;220;221;48;2;92;225;230m▄\e[38;2;157;220;221;48;2;92;225;230m▄\e[38;2;159;220;221;48;2;92;225;230m▄\e[38;2;161;220;221;48;2;92;225;230m▄\e[38;2;170;220;220;48;2;92;225;230m▄\e[38;2;214;217;214;48;2;116;220;223m▄\e[38;2;219;217;214;48;2;136;143;146m▄\e[38;2;219;217;214;48;2;192;193;192m▄\e[38;2;219;217;214;48;2;219;218;214m▄▄▄▄▄\e[38;2;219;218;215;48;2;220;218;215m▄\e[38;2;218;216;215;48;2;219;217;215m▄\e[48;2;215;215;215m                          \e[48;2;216;215;215m \e[38;2;219;218;215;48;2;220;218;215m▄▄\e[38;2;219;218;214;48;2;220;218;215m▄▄\e[38;2;219;218;215;48;2;220;218;215m▄▄▄▄\e[38;2;219;218;214;48;2;220;218;215m▄▄\e[38;2;219;218;215;48;2;220;218;215m▄▄▄▄\e[38;2;219;218;214;48;2;220;218;215m▄▄\e[38;2;219;218;215;48;2;220;218;215m▄▄▄▄\e[38;2;219;218;214;48;2;220;218;215m▄▄\e[38;2;219;218;215;48;2;220;218;215m▄▄▄▄▄▄▄▄▄▄▄\e[48;2;216;216;215m \e[m
 ";
 printf "\n                               OpenAMS by KnightRadiant\n";
+    elif [ "$installation_type" == "EMU" ]; then
+printf "
+  ███████╗███╗   ███╗██╗   ██╗
+  ██╔════╝████╗ ████║██║   ██║
+  █████╗  ██╔████╔██║██║   ██║
+  ██╔══╝  ██║╚██╔╝██║██║   ██║
+  ███████╗██║ ╚═╝ ██║╚██████╔╝
+  ╚══════╝╚═╝     ╚═╝ ╚═════╝
+";
+printf "                        EMU by ArmoredTurtle\n";
 fi
 
 
@@ -254,6 +264,10 @@ fi
           printf "E. QuattroBox Board Type : %s \n" "$qb_board_type"
           printf "F. QuattroBox Motor Type : %s \n" "$qb_motor_type"
           ;;
+        "EMU")
+          printf "C. EMU Unit Name : %s \n" "$boxturtle_name"
+          printf "G. EMU Lane Count : %s \n" "$emu_num_lanes"
+          ;;
       esac
       printf "\n${BOLD_GREEN}I. Install system with current selections${RESET}\n"
     fi
@@ -287,13 +301,19 @@ fi
         buffer_type=$(case "$buffer_type" in "TurtleNeck") echo "TurtleNeckV2";; "TurtleNeckV2") echo "None";; "None"|*) echo "TurtleNeck";; esac)
         message="Buffer Type: $buffer_type" ;;
       C)
-        name_unit ;;
+        if [ "$installation_type" == "EMU" ]; then
+          name_additional_unit
+        else
+          name_unit
+        fi ;;
       D)
         cycle_array htlf_board_types board_counter htlf_board_type "HTLF Board Type" ;;
       E)
         cycle_array qb_board_types board_counter qb_board_type "QuattroBox Board Type" ;;
       F)
         cycle_array qb_motor_types motor qb_motor_type "QuattroBox Motor Type" ;;
+      G)
+        cycle_array emu_num_lanes_options emu_num_lanes_index emu_num_lanes "EMU Lane Count" ;;
       I) install_afc ;;
       M) main_menu ;;
       Q) exit_afc_install ;;
