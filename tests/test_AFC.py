@@ -28,6 +28,7 @@ import pytest
 
 from extras.AFC import afc, State, AFC_VERSION
 from extras.AFC_lane import AFCLaneState
+from klippy import Printer
 
 
 # ── State constants ───────────────────────────────────────────────────────────
@@ -98,6 +99,7 @@ def _make_afc():
     obj.reactor = inner.reactor
     obj.moonraker = None
     obj.function = MagicMock()
+    obj.gcode = MagicMock()
     obj.message_queue = []
     # obj.current = MagicMock()
     obj.current_loading = None
@@ -122,6 +124,10 @@ def _make_afc():
     obj.in_toolchange = False
     obj.get_bypass_state = MagicMock(return_value=False)
     obj._get_quiet_mode = MagicMock(return_value=False)
+    obj.park = False
+    obj.park_cmd = None
+    obj.wipe = False
+    obj.wipe_cmd = None
     return obj
 
 
@@ -583,11 +589,13 @@ def _make_afc_for_change_tool(lane_name="lane2", next_extruder_name="extruder1",
     obj.restore_pos = MagicMock()
     obj.TOOL_LOAD = MagicMock(return_value=True)
     obj.TOOL_UNLOAD = MagicMock(return_value=True)
+    obj.LANE_UNLOAD = MagicMock(return_value=True)
     obj._check_bypass = MagicMock(return_value=False)
     obj._heat_next_extruder = MagicMock()
     obj._cooldown_last_extruder = MagicMock()
     obj._wait_for_temp_within_tolerance = MagicMock()
     obj.error = MagicMock()
+    obj.printer = Printer
 
     # Current (old) lane/extruder
     current_extruder = MagicMock()
@@ -664,9 +672,13 @@ class TestChangeTool_NewExtruderTemp:
             call_order.append("heat"),
             obj._heat_next_extruder.return_value
         )[1]
+        obj.TOOL_UNLOAD.side_effect = lambda *a, **kw: (
+            call_order.append("unload"),
+            obj.TOOL_UNLOAD.return_value
+        )[1]
         obj._cooldown_last_extruder.side_effect = lambda *a, **kw: call_order.append("cool")
         obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
-        assert call_order == ["heat", "cool"], f"Wrong call order: {call_order}"
+        assert call_order == ["heat", "cool", "unload"], f"Wrong call order: {call_order}"
 
     def test_wait_for_temp_called_after_unload(self):
         """_wait_for_temp_within_tolerance is called (after unload) when adjusting temps."""
@@ -697,6 +709,91 @@ class TestChangeTool_NewExtruderTemp:
         )
         obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
         obj._cooldown_last_extruder.assert_not_called()
+
+class TestChangeTool_NewExtruderTemp_Park_Wipe: 
+    def test_no_park_called(self):
+        obj, cur_lane, current_lane = _make_afc_for_change_tool()
+        obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
+        obj.gcode.run_script_from_command.assert_not_called()
+        info_msgs = [m for lvl, m in obj.logger.messages if lvl == "info"]
+        assert not any("Parking while waiting for extruder to heat." in m for m in info_msgs)
+    
+    def test_park_called_infinite_runout(self):
+        obj, cur_lane, current_lane = _make_afc_for_change_tool()
+        obj.park = True
+        obj.park_cmd = "AFC_PARK"
+        cur_lane.status = AFCLaneState.INFINITE_RUNOUT
+        obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
+        obj.gcode.run_script_from_command.assert_called_once()
+        info_msgs = [m for lvl, m in obj.logger.messages if lvl == "info"]
+        assert any("Parking while waiting for extruder to heat." in m for m in info_msgs)
+        assert obj.gcode.run_script_from_command.call_args.args[0] == \
+            f"{obj.park_cmd} EXTRUDER={current_lane.extruder_obj.name}"
+    
+    def test_park_set_not_infinite_runout(self):
+        obj, cur_lane, current_lane = _make_afc_for_change_tool()
+        obj.park = True
+        obj.park_cmd = "AFC_PARK"
+        obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
+        obj.gcode.run_script_from_command.assert_not_called()
+    
+    def test_park_bool_set_cmd_not_set(self):
+        obj, cur_lane, current_lane = _make_afc_for_change_tool()
+        obj.park = True
+        obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
+        obj.gcode.run_script_from_command.assert_not_called()
+        info_msgs = [m for lvl, m in obj.logger.messages if lvl == "info"]
+        assert not any("Parking while waiting for extruder to heat." in m for m in info_msgs)
+    
+    def test_park_bool_not_set_cmd_set(self):
+        obj, cur_lane, current_lane = _make_afc_for_change_tool()
+        obj.park_cmd = "AFC_PARK"
+        obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
+        obj.gcode.run_script_from_command.assert_not_called()
+        info_msgs = [m for lvl, m in obj.logger.messages if lvl == "info"]
+        assert not any("Parking while waiting for extruder to heat." in m for m in info_msgs)
+
+    def test_no_wipe_called(self):
+        obj, cur_lane, current_lane = _make_afc_for_change_tool()
+        obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
+        obj.gcode.run_script_from_command.assert_not_called()
+        info_msgs = [m for lvl, m in obj.logger.messages if lvl == "info"]
+        assert not any("Wiping ooze..." in m for m in info_msgs)
+    
+    def test_wipe_called_infinite_runout(self):
+        obj, cur_lane, current_lane = _make_afc_for_change_tool()
+        obj.wipe = True
+        obj.wipe_cmd = "AFC_WIPE"
+        cur_lane.status = AFCLaneState.INFINITE_RUNOUT
+        obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
+        obj.gcode.run_script_from_command.assert_called_once()
+        info_msgs = [m for lvl, m in obj.logger.messages if lvl == "info"]
+        assert any("Wiping ooze..." in m for m in info_msgs)
+        assert obj.gcode.run_script_from_command.call_args.args[0] == \
+            f"{obj.wipe_cmd} EXTRUDER={current_lane.extruder_obj.name}"
+    
+    def test_wipe_set_not_infinite_runout(self):
+        obj, cur_lane, current_lane = _make_afc_for_change_tool()
+        obj.wipe = True
+        obj.wipe_cmd = "AFC_WIPE"
+        obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
+        obj.gcode.run_script_from_command.assert_not_called()
+    
+    def test_wipe_bool_set_cmd_not_set(self):
+        obj, cur_lane, current_lane = _make_afc_for_change_tool()
+        obj.wipe = True
+        obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
+        obj.gcode.run_script_from_command.assert_not_called()
+        info_msgs = [m for lvl, m in obj.logger.messages if lvl == "info"]
+        assert not any("Wiping ooze..." in m for m in info_msgs)
+    
+    def test_wipe_bool_not_set_cmd_set(self):
+        obj, cur_lane, current_lane = _make_afc_for_change_tool()
+        obj.wipe_cmd = "AFC_WIPE"
+        obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
+        obj.gcode.run_script_from_command.assert_not_called()
+        info_msgs = [m for lvl, m in obj.logger.messages if lvl == "info"]
+        assert not any("Wiping ooze..." in m for m in info_msgs)
 
 
 # ── CHANGE_TOOL: early-exit paths ─────────────────────────────────────────────
@@ -1153,9 +1250,20 @@ class TestChangeTool_InfiniteRunout:
 
     def test_adjusting_temperature_true_when_extruder_changes(self):
         """adjusting_temperature is True (heat path entered) when the extruder differs."""
+        call_order = []
         obj, cur_lane, _ = self._make_infinite_runout(same_extruder=False)
+        obj._heat_next_extruder.side_effect = lambda **kw: (
+            call_order.append("heat"),
+            obj._heat_next_extruder.return_value
+        )[1]
+        obj.TOOL_UNLOAD.side_effect = lambda *a, **kw: (
+            call_order.append("unload"),
+            obj.TOOL_UNLOAD.return_value
+        )[1]
+        obj._cooldown_last_extruder.side_effect = lambda *a, **kw: call_order.append("cool")
         obj.CHANGE_TOOL(cur_lane)
         obj._heat_next_extruder.assert_called_once()
+        assert call_order == ["heat", "unload", "cool"], f"Wrong call order: {call_order}"
 
     def test_adjusting_temperature_false_when_same_extruder(self):
         """adjusting_temperature is False when infinite_runout but the extruder is unchanged."""
@@ -1183,6 +1291,24 @@ class TestChangeTool_InfiniteRunout:
         cur_lane.status = AFCLaneState.LOADED
         obj.CHANGE_TOOL(cur_lane, new_extruder_temp=200.0)
         assert cur_lane.status == AFCLaneState.LOADED
+    
+    def test_force_unload_not_standalone_lane(self):
+        obj, cur_lane, current_lane = self._make_infinite_runout(same_extruder=False)
+        current_lane.extruder_obj.is_standalone.return_value = False
+        obj.CHANGE_TOOL(cur_lane)
+        obj.LANE_UNLOAD.assert_called_once()
+    
+    def test_force_unload_standalone_lane(self):
+        obj, cur_lane, current_lane = self._make_infinite_runout(same_extruder=False)
+        current_lane.extruder_obj.is_standalone.return_value = True
+        obj.CHANGE_TOOL(cur_lane)
+        obj.LANE_UNLOAD.assert_not_called()
+    
+    def test_force_unload_direct_lane(self):
+        obj, cur_lane, current_lane = self._make_infinite_runout(same_extruder=False)
+        current_lane.is_direct_hub = MagicMock(return_value = True)
+        obj.CHANGE_TOOL(cur_lane)
+        obj.LANE_UNLOAD.assert_not_called()
 
 
 # ── CHANGE_TOOL: exception handling ──────────────────────────────────────────
@@ -1327,6 +1453,73 @@ class TestCmdChangeTool_NewExtruderTempParsing:
         assert "PURGE_LENGTH" in error_msg
         obj.CHANGE_TOOL.assert_not_called()
 
+class TestCmdChange_ToolCheckBypass_CheckHomed():
+    def _make_gcmd(self):
+        gcmd = MagicMock()
+        # Use a T0 command line so cmd_CHANGE_TOOL takes the simple else-branch
+        # (no "CHANGE" in command) and Tcmd = "T0" directly.
+        gcmd.get_commandline.return_value = "T0"
+        return gcmd
+
+    def test_check_bypass_True(self):
+        obj, _, _ = _make_afc_for_change_tool()
+        gcmd = self._make_gcmd()
+        obj._check_bypass.return_value = True
+
+        ret = obj.cmd_CHANGE_TOOL(gcmd)
+        assert not ret
+
+    def test_check_homed_False(self):
+        obj, _, _ = _make_afc_for_change_tool()
+        gcmd = self._make_gcmd()
+        obj.function.check_homed.return_value = False
+
+        ret = obj.cmd_CHANGE_TOOL(gcmd)
+        assert not ret
+
+class TestCmdChangeTool_SnapmakerPath:
+    def _make_gcmd(self, tcmd="T0"):
+        gcmd = MagicMock()
+        # Use a T0 command line so cmd_CHANGE_TOOL takes the simple else-branch
+        # (no "CHANGE" in command) and Tcmd = "T0" directly.
+        gcmd.get_commandline.return_value = f"{tcmd} A0"
+        gcmd.get.side_effect = lambda key, default=None: {
+            "A": "0"
+        }.get(key, default)
+        return gcmd
+    def get_snapmaker_config_dir():
+            pass
+
+    def test_setting_A_param(self, monkeypatch):
+        obj, _, _ = _make_afc_for_change_tool()
+        monkeypatch.setattr(Printer, "get_snapmaker_config_dir", True, raising=False)
+        gcmd = self._make_gcmd()
+        obj.gcode = MagicMock()
+        obj.gcode.ready_gcode_handlers = {"_T0": MagicMock()}
+        ret = obj.cmd_CHANGE_TOOL(gcmd)
+        obj.gcode.run_script_from_command.assert_called_once()
+    
+    def test_setting_A_param_snapmaker_false(self):
+        obj, _, _ = _make_afc_for_change_tool()
+        obj.function.check_homed.return_value = False
+        gcmd = self._make_gcmd()
+        obj.gcode = MagicMock()
+        obj.gcode.ready_gcode_handlers = {"_T0": MagicMock()}
+        ret = obj.cmd_CHANGE_TOOL(gcmd)
+        obj.gcode.run_script_from_command.assert_not_called()
+        assert not ret
+
+    def test_setting_A_param_not_in_ready_gcode_handlers(self, monkeypatch):
+        obj, _, _ = _make_afc_for_change_tool()
+        obj.function.check_homed.return_value = False
+        monkeypatch.setattr(Printer, "get_snapmaker_config_dir", True, raising=False)
+        obj.function.check_homed.return_value = False
+        gcmd = self._make_gcmd("T5")
+        obj.gcode = MagicMock()
+        obj.gcode.ready_gcode_handlers = {"_T0": MagicMock()}
+        ret = obj.cmd_CHANGE_TOOL(gcmd)
+        obj.gcode.run_script_from_command.assert_not_called()
+        assert not ret
 
 # ── TOOL_LOAD: destination extruder already has a different lane loaded ───────
 
@@ -2162,7 +2355,51 @@ class TestGetDefaultMaterialTemps:
             assert using_min is False
 
 
-# ── cmd_LANE_MOVE ─────────────────────────────────────────────────────────────
+# in_print_reactor_timer: moonraker None guard
+
+class TestInPrintReactorTimer:
+    """
+    Tests for in_print_reactor_timer guarding against an uninitialized
+    moonraker object. If PREP has not been run, self.moonraker is None and
+    calling methods on it would raise AttributeError and crash klipper.
+    """
+
+    def _make(self):
+        obj = _make_afc()
+        obj.in_print_timer = MagicMock()
+        return obj
+
+    def test_skips_moonraker_call_when_moonraker_is_none(self):
+        """When in_print is True but moonraker is None, do not deref moonraker."""
+        obj = self._make()
+        obj.moonraker = None
+        obj.function.in_print.return_value = (True, "test.gcode")
+        # Must not raise AttributeError on NoneType.
+        result = obj.in_print_reactor_timer(0.0)
+        assert result == obj.reactor.NEVER
+
+    def test_calls_moonraker_when_in_print_and_moonraker_set(self):
+        """Happy path: moonraker is queried when both in_print and moonraker are set."""
+        obj = self._make()
+        obj.moonraker = MagicMock()
+        obj.moonraker.get_file_filament_change_count.return_value = 7
+        obj.function.in_print.return_value = (True, "test.gcode")
+        obj.function.get_current_lane_obj.return_value = None
+        obj.in_print_reactor_timer(0.0)
+        obj.moonraker.get_file_filament_change_count.assert_called_once_with("test.gcode")
+        assert obj.number_of_toolchanges == 7
+        assert obj.current_toolchange == -1
+
+    def test_does_not_call_moonraker_when_not_in_print(self):
+        """When not in a print, moonraker should not be queried."""
+        obj = self._make()
+        obj.moonraker = MagicMock()
+        obj.function.in_print.return_value = (False, None)
+        obj.in_print_reactor_timer(0.0)
+        obj.moonraker.get_file_filament_change_count.assert_not_called()
+
+
+# cmd_LANE_MOVE
 
 def _make_afc_for_lane_move(is_printing=False):
     """Build an afc instance wired up for cmd_LANE_MOVE tests."""
@@ -2276,3 +2513,15 @@ class TestCmdLaneMove:
         obj.cmd_LANE_MOVE(gcmd)
         args = lane.move_advanced.call_args.args
         assert args[1] == SpeedMode.LONG
+
+class TestCheckForSnapmakerSignature:
+    def test_check_snapmaker_printer_property_false(self):
+        obj = _make_afc()
+        obj.printer = Printer
+        assert not obj.snapmaker_printer
+    
+    def test_check_snapmaker_printer_property_true(self, monkeypatch):
+        obj = _make_afc()
+        obj.printer = Printer
+        monkeypatch.setattr(Printer, "get_snapmaker_config_dir", True, raising=False)
+        assert obj.snapmaker_printer

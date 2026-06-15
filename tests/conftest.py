@@ -192,6 +192,10 @@ def _make_force_move_mock():
 def _make_klippy_ready_mock():
     mod = types.ModuleType("klippy")
     mod.message_ready = "Printer is ready"
+    
+    class Printer:
+        pass
+    mod.Printer = Printer
     return mod
 
 
@@ -388,6 +392,10 @@ class MockAFC:
         self.function.HexConvert = lambda x: x
         self.toolhead = MagicMock()
 
+        self.save_pos = MagicMock()
+        self.CHANGE_TOOL = MagicMock()
+        self.restore_pos = MagicMock()
+
 
 class MockPrinter:
     """Mock for Klipper's printer object."""
@@ -430,6 +438,8 @@ class MockPrinter:
         if name == "pins":
             return MagicMock()
         if name == "buttons":
+            return MagicMock()
+        if name == "extruder":
             return MagicMock()
         return default
 
