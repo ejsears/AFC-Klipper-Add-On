@@ -33,18 +33,18 @@ main_menu() {
     ";
     printf "This installation script will install/update the AFC Klipper extension to your system.\n\n"
     if [ "$files_updated_or_installed" == "True" ]; then
-      printf "    Prior AFC-Klipper-Add-On installation detected: $GREEN%s$RESET\n" $files_updated_or_installed
+      printf "    Prior AFC-Klipper-Add-On installation detected: $GREEN%s$RESET\n" "$files_updated_or_installed"
     elif [ "$prior_installation" == "True" ]; then
-      printf "    Prior AFC-Klipper-Add-On installation detected: $GREEN%s$RESET\n" $prior_installation
+      printf "    Prior AFC-Klipper-Add-On installation detected: $GREEN%s$RESET\n" "$prior_installation"
     elif [ "$prior_installation" == "False" ]; then
-      printf "    Prior AFC-Klipper-Add-On installation detected: $RED%s$RESET\n" $prior_installation
+      printf "    Prior AFC-Klipper-Add-On installation detected: $RED%s$RESET\n" "$prior_installation"
     fi
-    printf "\n      1. Printer Config Directory : %s \n" $printer_config_dir
-    printf "      2. Klipper Directory        : %s \n" $klipper_dir
-    printf "      3. Moonraker Config File    : %s \n" $moonraker_config_file
-    printf "      4. Klipper Service Name     : %s \n" $klipper_service
-    printf "      5. Branch                   : %s \n" $branch
-    printf "      6. Moonraker Address        : %s    \n" $moonraker
+    printf "\n      1. Printer Config Directory : %s \n" "$printer_config_dir"
+    printf "      2. Klipper Directory        : %s \n" "$klipper_dir"
+    printf "      3. Moonraker Config File    : %s \n" "$moonraker_config_file"
+    printf "      4. Klipper Service Name     : %s \n" "$klipper_service"
+    printf "      5. Branch                   : %s \n" "$branch"
+    printf "      6. Moonraker Address        : %s    \n" "$moonraker"
 
     echo ""
     printf "${MENU_GREEN}▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ \n"
