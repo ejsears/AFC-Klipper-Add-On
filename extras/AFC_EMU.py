@@ -39,21 +39,8 @@ class AFC_EMU(afcBoxTurtle):
         """
         super().handle_connect()
 
-        self.logo  = '<span class=success--text>R   .~~~~.\n'
-        self.logo += 'E  ((<span class=warning--text>o</span><span class=success--text>) (<span class=warning--text>o</span><span class=success--text>))\n'
-        self.logo += 'A   ( -v- )\n'
-        self.logo += 'D    \\___/\n'
-        self.logo += 'Y     | |\n'
-        self.logo += '!    _| |_</span>\n'
-        self.logo += '  ' + self.name + '\n'
-
-        self.logo_error  = '<span class=error--text>E   .~~~~.\n'
-        self.logo_error += 'R  ((X) (X))\n'
-        self.logo_error += 'R   ( -!- )\n'
-        self.logo_error += 'O    \\___/\n'
-        self.logo_error += 'R     | |\n'
-        self.logo_error += '!    _| |_</span>\n'
-        self.logo_error += '  ' + self.name + '\n'
+        self.logo = '<span class=success--text>EMU Ready\n</span>'
+        self.logo_error = '<span class=error--text>EMU Not Ready</span>\n'
 
     def prep_post_load(self, lane: AFCLane):
         """
