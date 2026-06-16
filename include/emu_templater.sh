@@ -326,8 +326,8 @@ EOF
   # Write buffer section (uses lane1 for buffer advance/trailing pins)
   cat >> "${output_file}" <<EOF
 [AFC_buffer ${unit_name}_buffer]
-advance_pin: ${unit_name}_lane1:BUFFER_ADV
-trailing_pin: ${unit_name}_lane1:BUFFER_TRL
+advance_pin: ^${unit_name}_lane1:BUFFER_ADV
+trailing_pin: ^${unit_name}_lane1:BUFFER_TRL
 multiplier_high: 1.15
 multiplier_low: 0.90
 
