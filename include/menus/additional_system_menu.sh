@@ -25,6 +25,7 @@ additional_system_menu() {
   boxturtle_name="Turtle_2"
   counter=0
   board_counter=0
+  emu_board_counter=0
   qb_board_counter=0
   qb_motor_counter=0
   motor=0
@@ -334,7 +335,7 @@ fi
       G)
         cycle_array emu_num_lanes_options emu_num_lanes_index emu_num_lanes "EMU Lane Count" ;;
       H)
-        cycle_array emu_board_types board_counter emu_board_type "EMU Board Type" ;;
+        cycle_array emu_board_types emu_board_counter emu_board_type "EMU Board Type" ;;
       1)
         name_additional_unit
         export message ;;
