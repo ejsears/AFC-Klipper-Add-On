@@ -27,6 +27,7 @@ additional_system_menu() {
   board_counter=0
   qb_board_counter=0
   qb_motor_counter=0
+  motor=0
   while true; do
     clear
     if [ "$installation_type" == "BoxTurtle (4-Lane)" ] || [ "$installation_type" == "BoxTurtle (8-Lane)" ]; then
@@ -258,6 +259,11 @@ fi
           boxturtle_name="Vivid_1"
         fi
         printf "1. ViViD Name: %s \n" "$boxturtle_name"
+      elif [ "$installation_type" == "EMU" ]; then
+        if [ "$turtle_renamed" != "True" ]; then
+          boxturtle_name="EMU_1"
+        fi
+        printf "1. EMU Name: %s \n" "$boxturtle_name"
       fi
       if [ "$installation_type" == "HTLF" ]; then
         printf "D. HTLF Board Type: %s \n" "$htlf_board_type"
@@ -268,7 +274,10 @@ fi
       if [ "$installation_type" == "QuattroBox" ]; then
         printf "F. QuattroBox Motor Type: %s \n" "$qb_motor_type"
       fi
-
+      if [ "$installation_type" == "EMU" ]; then
+        printf "G. EMU Lane Count : %s \n" "$emu_num_lanes"
+        printf "H. EMU Board Type : %s \n" "$emu_board_type"
+      fi
     fi
     echo ""
     if [ "$files_updated_or_installed" == "False" ]; then
@@ -322,6 +331,10 @@ fi
         # Update the message
         message="QuattroBox Motor Type: $qb_motor_type"
         export message ;;
+      G)
+        cycle_array emu_num_lanes_options emu_num_lanes_index emu_num_lanes "EMU Lane Count" ;;
+      H)
+        cycle_array emu_board_types board_counter emu_board_type "EMU Board Type" ;;
       1)
         name_additional_unit
         export message ;;

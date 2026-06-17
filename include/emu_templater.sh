@@ -11,7 +11,7 @@ generate_emu_config() {
   local num_lanes="$2"
   local board_type="${emu_board_type:-EBB}"
   local output_file="${afc_config_dir}/AFC_${unit_name}.cfg"
-  local mcu_output_file="${afc_config_dir}/mcu/EMU_${unit_name}.cfg"
+  local mcu_output_file="${afc_config_dir}/mcu/${unit_name}.cfg"
 
   mkdir -p "${afc_config_dir}/mcu"
 
