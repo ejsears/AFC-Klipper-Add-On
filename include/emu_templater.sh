@@ -88,7 +88,7 @@ EOF
 
   # Write unit config header
   cat > "${output_file}" <<EOF
-[include mcu/EMU_${unit_name}.cfg]
+[include mcu/${unit_name}.cfg]
 
 EOF
 
