@@ -152,6 +152,13 @@ class TestLaneMove:
         assert _emitted_command(output) == "LANE_MOVE LANE=lane2 DISTANCE=100.0"
         assert responded == []
 
+    def test_new_usage_full_lane_name_case_insensitive(self):
+        output, responded = _render(
+            "BT_LANE_MOVE", {"LANE": "LANE2", "DISTANCE": "100"}
+        )
+        assert _emitted_command(output) == "LANE_MOVE LANE=lane2 DISTANCE=100.0"
+        assert responded == []
+
     def test_invalid_lane_fails_clearly_even_with_valid_distance(self):
         output, responded = _render(
             "BT_LANE_MOVE", {"LANE": "garbage", "DISTANCE": "100"}
