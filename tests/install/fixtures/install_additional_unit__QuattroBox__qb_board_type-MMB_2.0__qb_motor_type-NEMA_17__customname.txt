@@ -181,5 +181,5 @@ aliases:
     
   	BUTTON1=PB1 	, BUTTON2=PC5	, BUTTON3=PC0		, BUTTON4=PC4	,	 
 	
-	RGB=PC3		    ,
+	RGB=PC3		    , PSF=PC2,
 --- end mcu/MMB_2.0_QB_CustomName2.cfg ---

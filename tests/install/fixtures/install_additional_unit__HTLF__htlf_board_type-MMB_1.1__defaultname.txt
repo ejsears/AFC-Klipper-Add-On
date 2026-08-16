@@ -117,4 +117,4 @@ aliases:
 	SPARE5=PB3     , SPARE6=PB4    , SPARE7=PB11  , SPARE8=PB10    ,
 	SPARE9=PB2     ,
 	
-	RGB1=PA2	   , --- end mcu/HTLF_MMB_1.1.cfg ---
+	RGB1=PA2	   , PSF=PA1,--- end mcu/HTLF_MMB_1.1.cfg ---

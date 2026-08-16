@@ -37,6 +37,10 @@ export afc_path="$REPO_ROOT"
 # shellcheck source=/dev/null
 source "$REPO_ROOT/include/units/registry.sh"
 source "$REPO_ROOT/include/constants.sh"
+# constants.sh unconditionally sets afc_path="$HOME/AFC-Klipper-Add-On"; force
+# it back to the checked-out repo so tests exercise this tree's templates,
+# not whatever (if anything) happens to be installed at that fixed path.
+export afc_path="$REPO_ROOT"
 source "$REPO_ROOT/include/colors.sh"
 source "$REPO_ROOT/include/utils.sh"
 source "$REPO_ROOT/include/check_commands.sh"

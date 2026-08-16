@@ -105,8 +105,8 @@ enable_force_move: True
 [AFC_extruder extruder]
 pin_tool_start: enter_tool_pin
 #pin_tool_end: None
-tool_stn: 72                    # See documentation for details on how to calculate this value. https://armoredturtle.xyz/docs/afc-klipper-add-on/toolhead/calculation.html
-tool_stn_unload: 100            # See documentation for details on how to calculate this value. https://armoredturtle.xyz/docs/afc-klipper-add-on/toolhead/calculation.html
+tool_stn: 72                    # See documentation for details on how to calculate this value. https://www.afcproject.dev/toolhead/calculation.html
+tool_stn_unload: 100            # See documentation for details on how to calculate this value. https://www.afcproject.dev/toolhead/calculation.html
 tool_sensor_after_extruder: 0   # Extra distance to move in mm once pre/post sensors are clear. Useful for when only using post sensor, so this distance can be the amount to move to clear extruder gears
 tool_unload_speed: 25           # Unload speed in mm/s when unloading toolhead. Default is 25mm/s.
 tool_load_speed: 25             # Load speed in mm/s when loading toolhead. Default is 25mm/s.
@@ -141,14 +141,15 @@ multiplier_low:  0.95   # default 0.95, factor to feed less filament
 [board_pins erb_htlf]
 mcu: ERB
 aliases:
-    M1_STEP=gpio16   , M1_DIR=gpio15   , M1_EN=gpio14    , M1_UART=gpio17   , # M1_DIAG=PA3   ,
-    M2_STEP=gpio10    , M2_DIR=gpio9   , M2_EN=gpio8    , M2_UART=gpio11    , # M2_DIAG=PA4   ,
+    M1_STEP=gpio16   , M1_DIR=gpio15   , M1_EN=gpio14    , M1_UART=gpio17   , # M1_DIAG=gpio19   ,
+    M2_STEP=gpio10    , M2_DIR=gpio9   , M2_EN=gpio8    , M2_UART=gpio11    , # M2_DIAG=gpio13   ,
 
 	HUB=gpio25 		, 
 	HOME_POS=gpio24   ,
 	LOAD1=gpio12  	   , LOAD2=gpio3 	   , LOAD3=gpio6	  , LOAD4=gpio27 	   ,
-	SPARE1=PC13	   , SPARE2=PC14   , SPARE3=PB12  , SPARE4=PA0     ,
-	SPARE5=PA1     , SPARE6=PB3    , SPARE7=PB4   , SPARE8=PB11    ,
-	SPARE9=PB10    , SPARE10=PB2   ,
 	
-	RGB1=gpio21	   , --- end mcu/HTLF_ERB.cfg ---
+	RGB1=gpio21	   ,
+
+    # The following pins are all ADC pins on the ERB 2.0 board for the PSF sensor
+    # gpio26, gpio 27, gpio28, gpio29
+    PSF=gpio26--- end mcu/HTLF_ERB.cfg ---
