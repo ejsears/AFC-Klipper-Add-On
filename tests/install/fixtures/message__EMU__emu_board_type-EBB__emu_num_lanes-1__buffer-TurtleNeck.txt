@@ -2,7 +2,7 @@
 
 - AFC Configuration updated with selected options at <WORKDIR>/AFC/AFC.cfg
 
-- AFC-Klipper-Add-On python extensions installed to /home/eric/klipper/klippy/extras/
+- AFC-Klipper-Add-On python extensions installed to <WORKDIR>/klipper/klippy/extras/
 
 - Ensure you enter either your CAN bus or serial information for each lane in the <WORKDIR>/AFC/AFC_Turtle_1.cfg file
 

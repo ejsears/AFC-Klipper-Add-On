@@ -57,6 +57,9 @@ done < <(env)
 
 WORKDIR=$(mktemp -d)
 trap 'rm -rf "$WORKDIR"' EXIT
+
+printer_config_dir="$WORKDIR/printer_data/config"
+klipper_dir="$WORKDIR/klipper"
 afc_config_dir="$WORKDIR/AFC"
 afc_file="$afc_config_dir/AFC.cfg"
 
@@ -69,7 +72,7 @@ dump_config_dir() {
   done
 }
 
-case "$MODE" in
+case "${MODE:-}" in
   copy_unit_files)
     mkdir -p "$afc_config_dir/mcu" "$afc_config_dir/macros"
     copy_unit_files
@@ -94,7 +97,10 @@ case "$MODE" in
     mkdir -p "$afc_config_dir/mcu" "$afc_config_dir/macros"
     build_install_message
     echo "=== MESSAGE ==="
-    printf '%s' "${message//$WORKDIR/<WORKDIR>}"
+    normalized="${message//$WORKDIR/<WORKDIR>}"
+    normalized="${normalized//$REPO_ROOT/<REPO_ROOT>}"
+    normalized="${normalized//$HOME/<HOME>}"
+    printf '%s' "$normalized"
     ;;
   name_additional_unit)
     name_additional_unit < /dev/null
@@ -128,7 +134,7 @@ case "$MODE" in
     echo "still alive"
     ;;
   *)
-    echo "Unknown MODE: $MODE" >&2
+    echo "Unknown MODE: ${MODE:-}" >&2
     exit 1
     ;;
 esac

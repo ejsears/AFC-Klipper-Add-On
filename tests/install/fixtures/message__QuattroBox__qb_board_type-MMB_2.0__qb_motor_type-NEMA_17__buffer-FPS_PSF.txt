@@ -2,7 +2,7 @@
 
 - AFC Configuration updated with selected options at <WORKDIR>/AFC/AFC.cfg
 
-- AFC-Klipper-Add-On python extensions installed to /home/eric/klipper/klippy/extras/
+- AFC-Klipper-Add-On python extensions installed to <WORKDIR>/klipper/klippy/extras/
 
 - You must update the <WORKDIR>/AFC/AFC_QuattroBox_1.cfg file to reference the proper buffer configuration and pins.
 

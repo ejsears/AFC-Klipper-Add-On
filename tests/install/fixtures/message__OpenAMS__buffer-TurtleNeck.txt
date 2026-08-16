@@ -2,7 +2,7 @@
 
 - AFC Configuration updated with selected options at <WORKDIR>/AFC/AFC.cfg
 
-- AFC-Klipper-Add-On python extensions installed to /home/eric/klipper/klippy/extras/
+- AFC-Klipper-Add-On python extensions installed to <WORKDIR>/klipper/klippy/extras/
 
 - Review and update the <WORKDIR>/AFC/AFC_AMS_1.cfg file for your AMS unit settings.
 
