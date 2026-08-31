@@ -22,6 +22,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -29,8 +30,8 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
-# Files/dirs the installer needs to reach the main menu.
-_CHECKOUT_ITEMS = ("install-afc.sh", "update-afc.sh", "include", "config", "templates")
+# Files/dirs the installer needs to reach the main menu / run an update.
+_CHECKOUT_ITEMS = ("install-afc.sh", "update-afc.sh", "include", "config", "templates", "extras")
 
 
 def _make_checkout(dest: Path) -> Path:
@@ -45,7 +46,6 @@ def _make_checkout(dest: Path) -> Path:
         else:
             shutil.copy2(src, dst)
     (dest / ".git").mkdir()
-    (dest / "extras").mkdir()
     return dest
 
 
@@ -121,6 +121,50 @@ def test_zip_extract_outside_home_is_detected_and_usable(tmp_path: Path):
     assert "installed via ZIP file" in out, out
     assert "config/AFC.cfg" not in out, out  # i.e. no "can't stat" failure
     assert rc == 0, out
+
+
+def _run_update_from_zip_extract(tmp_path: Path, *extra_args: str) -> tuple[subprocess.CompletedProcess, Path, Path]:
+    home = tmp_path / "home"
+    cfg = home / "printer_data" / "config"
+    (cfg / "AFC" / "macros").mkdir(parents=True)
+    # A realistic post-install AFC config so remove_velocity() has cfgs to scan.
+    (cfg / "AFC" / "AFC.cfg").write_text("[AFC_buffer Turtle_1]\nvelocity: 100\n")
+    klipper_extras = home / "klipper" / "klippy" / "extras"
+    klipper_extras.mkdir(parents=True)
+    venv = home / "venv"
+    venv.mkdir(parents=True)
+    (venv / "python").symlink_to(shutil.which("python3") or sys.executable)
+    extract = _make_zip_extract(tmp_path / "downloads" / "AFC-Klipper-Add-On-main")
+    env = os.environ.copy()
+    env["HOME"] = str(home)
+    env["LC_ALL"] = "C"
+    proc = subprocess.run(
+        ["bash", "update-afc.sh", *extra_args, "-p", str(cfg),
+         "-k", str(home / "klipper"), "-y", str(venv)],
+        # U -> update; Enter past the "manually updated?" notice; n -> keep
+        # macros; Q -> quit.
+        cwd=extract, env=env, input="U\n\nn\nQ\n",
+        capture_output=True, text=True, timeout=60,
+    )
+    return proc, extract, klipper_extras
+
+
+@pytest.mark.parametrize("test_mode_flag", [[], ["-t"]], ids=["normal", "test-mode"])
+def test_update_from_zip_extract_runs_normal_update_sequence(tmp_path: Path, test_mode_flag):
+    # Someone updates a ZIP install by extracting a fresh archive over the
+    # directory, then runs update-afc.sh from it. It must NOT try to `git clone`
+    # into the non-empty dir, and no git command must run against the non-git
+    # dir (get_git_version used to `cd` in and `git rev-parse`, failing with
+    # "fatal: not a git repository"). The normal update sequence still runs, so
+    # link_extensions symlinks the extras into Klipper.
+    proc, extract, klipper_extras = _run_update_from_zip_extract(tmp_path, *test_mode_flag)
+    out = ANSI.sub("", proc.stdout + proc.stderr)
+    assert proc.returncode == 0, out
+    assert "already exists and is not an empty directory" not in out, out
+    assert "not a git repository" not in out, out
+    linked = klipper_extras / "AFC.py"
+    assert linked.is_symlink(), f"link_extensions did not run\n{out}"
+    assert linked.resolve() == (extract / "extras" / "AFC.py").resolve()
 
 
 def test_m_flag_is_honoured(fake_checkout: Path, tmp_path: Path):
