@@ -69,6 +69,7 @@ def _run_installer(checkout: Path, home: Path, *args: str, stdin: str = "Q\n") -
     env = os.environ.copy()
     env["HOME"] = str(home)
     env["LC_ALL"] = "C"
+    env["TERM"] = "xterm"  # the scripts call `clear`, which errors under `set -e` with no TERM
     proc = subprocess.run(
         [
             "bash",
@@ -138,6 +139,7 @@ def _run_update_from_zip_extract(tmp_path: Path, *extra_args: str) -> tuple[subp
     env = os.environ.copy()
     env["HOME"] = str(home)
     env["LC_ALL"] = "C"
+    env["TERM"] = "xterm"  # the scripts call `clear`, which errors under `set -e` with no TERM
     proc = subprocess.run(
         ["bash", "update-afc.sh", *extra_args, "-p", str(cfg),
          "-k", str(home / "klipper"), "-y", str(venv)],
@@ -180,9 +182,12 @@ def test_m_flag_defaults_to_printer_config_dir(fake_checkout: Path, tmp_path: Pa
     assert f"Moonraker Config File    : {expected}" in out, out
 
 
-_MOONRAKER_HARNESS = r"""
+def _run_moonraker_update(afc_path: str, home: str) -> str:
+    # Source constants + update_commands, stub out restart_service, then let
+    # update_moonraker_config write the [update_manager afc-software] block.
+    script = f"""
 set -u
-REPO="{repo}"
+REPO="{REPO_ROOT}"
 source "$REPO/include/constants.sh"
 source "$REPO/include/update_commands.sh"
 restart_service() {{ :; }}
@@ -193,10 +198,6 @@ update_moonraker_config
 cat "$moonraker_config_file"
 rm -f "$moonraker_config_file"
 """
-
-
-def _run_moonraker_update(afc_path: str, home: str) -> str:
-    script = _MOONRAKER_HARNESS.format(repo=REPO_ROOT, afc_path=afc_path, home=home)
     proc = subprocess.run(
         ["bash", "-c", script], capture_output=True, text=True, timeout=30
     )
