@@ -80,7 +80,7 @@ def _make_lane(name="lane1", hub="hub1", extruder="ext1", buffer_name="buf1"):
     return lane
 
 
-def _make_configured_unit(values):
+def _make_configured_unit(values: dict[str, object]) -> afcUnit:
     """Build an afcUnit through its real __init__ so config parsing is
     exercised. `values` maps config option -> raw value, mimicking what a
     user wrote in the `[AFC_BoxTurtle ...]` section."""
