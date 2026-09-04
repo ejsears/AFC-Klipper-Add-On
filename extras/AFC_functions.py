@@ -1274,7 +1274,8 @@ class afcFunction:
         prompt.p_end()
 
         if lane is not None:
-            if self.afc.park and self.afc.park_cmd is not None:
+            if (self.afc.park
+                and self.afc.park_cmd):
                 self.afc.gcode.run_script_from_command(self.afc.park_cmd)
             self.logger.info('Starting test for lane(s): {}'.format(lane))
             lane_obj = self.afc.lanes.get(lane)
