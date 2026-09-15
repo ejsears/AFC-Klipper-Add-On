@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [09-12-2026]
+### Fixed
+- The `install-afc.sh` script will now properly enumerate additional unit installs.
+- The `install-afc.sh` script will now prompt for buffer selection on additional units.
+
 ## [09-10-2026]
 ### Fixed
 - Disabled ooze prevention by default, this was originally meant for toolchangers. But with a recent klipperscreen update, klipperscreen now sends tool number(T) when setting temperature for single toolhead printers and AFC does not set temp because this was defaulted as enabled.

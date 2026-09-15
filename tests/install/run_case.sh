@@ -20,6 +20,13 @@
 # MODE=additional_menu_row    -> run unit_print_additional_menu_row() (additional_system_menu.sh's
 #                                  name + option rows) and dump its stdout plus the resulting
 #                                  boxturtle_name (the function can mutate it as a side effect)
+# MODE=additional_default_name -> pre-creates $afc_config_dir plus any placeholder
+#                                  files named in CASE_seed_files (comma-separated,
+#                                  relative to $afc_config_dir, e.g.
+#                                  "AFC_Turtle_1.cfg,AFC_Turtle_2.cfg"), then dumps
+#                                  unit_additional_default_name()'s result -- the
+#                                  lowest free "<prefix>_N" default name offered by
+#                                  the "add additional unit" menu.
 # MODE=no_adapter_survival    -> runs under `set -e` (unlike every other mode) and calls
 #                                  each unit_* dispatcher plus print_unit_art for a type
 #                                  with no registered adapter. install-afc.sh itself runs
@@ -87,6 +94,18 @@ case "${MODE:-}" in
     echo "placeholder" > "$afc_config_dir/AFC_Turtle_1.cfg"
     install_additional_unit
     dump_config_dir
+    ;;
+  additional_default_name)
+    mkdir -p "$afc_config_dir"
+    if [ -n "${seed_files:-}" ]; then
+      IFS=',' read -ra _seed_files <<< "$seed_files"
+      for _f in "${_seed_files[@]}"; do
+        echo "placeholder" > "$afc_config_dir/$_f"
+      done
+    fi
+    echo "=== NAME ==="
+    unit_additional_default_name "$installation_type"
+    echo
     ;;
   buffer_target)
     get_unit_buffer_target

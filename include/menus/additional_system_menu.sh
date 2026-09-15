@@ -5,6 +5,14 @@
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
 
+additional_buffer_label() {
+  # Maps $additional_buffer_type to the "B" row's display text.
+  case "$1" in
+    "None") echo "No (shared with an existing unit's buffer)" ;;
+    *) echo "Yes: $(buffer_type_label "$1")" ;;
+  esac
+}
+
 additional_system_menu() {
   local message
   local choice
@@ -22,7 +30,14 @@ additional_system_menu() {
   message+="This is a best effort in adding an additional unit. You will probably be required\n"
   message+="to manually edit the configuration files to ensure proper operation.\n"
   # Override the default boxturtle_name to prevent conflicts with the default name.
-  boxturtle_name="Turtle_2"
+  boxturtle_name="$(unit_additional_default_name "$installation_type")"
+  # Additional units default to having their own buffer (matching the main
+  # installer's default); the user opts out to a shared one with the "B"
+  # row below.
+  additional_buffer_type="$buffer_type"
+  if [ "$additional_buffer_type" == "None" ]; then
+    additional_buffer_type="TurtleNeck"
+  fi
   counter=0
   board_counter=0
   emu_board_counter=0
@@ -43,6 +58,9 @@ additional_system_menu() {
     if [ "$files_updated_or_installed" == "False" ]; then
       printf "T. Installation Type: %s \n" "$installation_type"
       unit_print_additional_menu_row "$installation_type"
+      if unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")"; then
+        printf "B. Unit has its own buffer? : %s \n" "$(additional_buffer_label "$additional_buffer_type")"
+      fi
     fi
     echo ""
     if [ "$files_updated_or_installed" == "False" ]; then
@@ -63,9 +81,20 @@ additional_system_menu() {
         # Set the installation type to the current option
         installation_type="${installation_options[$counter]}"
 
+        # Buffer selection isn't offered for every type.
+        if ! unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")"; then
+          additional_buffer_type="None"
+        fi
+
         # Update the message
         message="Installation Type: $installation_type"
         export message ;;
+      B)
+        if unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")"; then
+          additional_buffer_type=$(case "$additional_buffer_type" in "TurtleNeck") echo "TurtleNeckV2";; "TurtleNeckV2") echo "FPS_PSF";; "FPS_PSF") echo "None";; "None"|*) echo "TurtleNeck";; esac)
+          message="Unit has its own buffer? $(additional_buffer_label "$additional_buffer_type")"
+          export message
+        fi ;;
       D)
         # Increment the counter and reset if it exceeds the array length
         board_counter=$(( (board_counter + 1) % ${#htlf_board_types[@]} ))
@@ -122,9 +151,20 @@ additional_system_menu() {
         verify_name_not_in_use ${boxturtle_name}
         if [ "$invalid_name" == "False" ]; then
           install_additional_unit
+          if unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")" && [ "$additional_buffer_type" != "None" ]; then
+            is_additional_unit="True"
+            apply_unit_buffer "$additional_buffer_type"
+            is_additional_unit="False"
+          fi
           message="${boxturtle_name} created successfully, please look over config file and update lane numbers."
           message+="\nAdditionally, please ensure any MCU connections are updated in the appropriate files (CANBus, serial, etc)"
           message+="\nThis is not a 100% turn-key solution and will require some manual configuration based on your specific setup."
+          if [ "$additional_buffer_type" == "TurtleNeckV2" ]; then
+            message+="\n\nEnsure you add the correct serial information to the ${afc_config_dir}/mcu/TurtleNeckv2.cfg file"
+          fi
+          if [ "$additional_buffer_type" == "FPS_PSF" ]; then
+            message+="\n\nEnsure the PSF ADC pin in your buffer configuration matches where your wiring is connected to your MCU."
+          fi
           message+="\n\n${RED}Please restart the script after installation to install additional units or make changes to the current unit.${NC}"
           export message
         fi

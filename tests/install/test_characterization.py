@@ -114,6 +114,21 @@ def iter_cases():
             overrides = {"installation_type": itype, "boxturtle_name": "Turtle_1", **variant}
             yield f"buffer_target__{base_name}", "buffer_target", overrides
 
+            # get_unit_buffer_target for an *additional* unit (is_additional_unit
+            # set). NightOwl/HTLF/QuattroBox/OpenAMS used to hardcode a "_1"
+            # target here that only matched the first unit -- a second unit's
+            # buffer would silently target (or collide with) the first one's
+            # file/section. BoxTurtle/Claymore/EMU already derived the target
+            # from $boxturtle_name and are included for symmetry/regression
+            # coverage.
+            overrides = {
+                "installation_type": itype,
+                "boxturtle_name": "CustomName2",
+                "is_additional_unit": "True",
+                **variant,
+            }
+            yield f"buffer_target__{base_name}__additional", "buffer_target", overrides
+
             # install_menu.sh's type-specific option rows: doesn't depend on
             # turtle_renamed (that only matters for the additional-unit menu).
             overrides = {"installation_type": itype, "boxturtle_name": "Foo_1", **variant}
@@ -147,6 +162,33 @@ def iter_cases():
 
         # name_additional_unit: only depends on installation_type.
         yield f"name_additional_unit__{slug(itype)}", "name_additional_unit", {"installation_type": itype}
+
+    # unit_additional_default_name: the "add additional unit" menu's default
+    # name is the lowest free "<prefix>_N" for the type, based on what's
+    # already in $afc_config_dir -- not a hardcoded "_2" that assumes a
+    # first unit of that type already exists (the reported bug: a first
+    # BoxTurtle added via this menu, e.g. after installing a Claymore first,
+    # used to default to "Turtle_2" even though no BoxTurtle existed yet).
+    default_name_cases = [
+        ("none-existing", []),
+        ("first-existing", ["AFC_Turtle_1.cfg"]),
+        ("first-and-second-existing", ["AFC_Turtle_1.cfg", "AFC_Turtle_2.cfg"]),
+        ("gap-only-second-existing", ["AFC_Turtle_2.cfg"]),
+    ]
+    for case_label, seed_files in default_name_cases:
+        overrides = {
+            "installation_type": "BoxTurtle (4-Lane)",
+            "seed_files": ",".join(seed_files),
+        }
+        yield f"additional_default_name__BoxTurtle_4Lane__{case_label}", "additional_default_name", overrides
+
+    # And one non-BoxTurtle type, to confirm the same counting logic applies
+    # generically (not just to the reported BoxTurtle case).
+    yield (
+        "additional_default_name__HTLF__first-existing",
+        "additional_default_name",
+        {"installation_type": "HTLF", "seed_files": "AFC_HTLF_1.cfg"},
+    )
 
 
 def all_cases():
