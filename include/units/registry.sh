@@ -98,6 +98,7 @@ UNIT_ADDITIONAL_BUFFER_SAFE=(
   "NightOwl"
   "HTLF"
   "QuattroBox"
+  "OpenAMS"
 )
 
 unit_additional_buffer_supported() {
@@ -110,6 +111,31 @@ unit_additional_buffer_supported() {
   return 1
 }
 
+unit_additional_buffer_options() {
+  case "$1" in
+    "OpenAMS") printf 'None FPS_PSF' ;;
+    *) printf 'None TurtleNeck TurtleNeckV2 FPS_PSF' ;;
+  esac
+}
+
+unit_additional_buffer_default() {
+  # Echoes the buffer_type the additional-unit menu should default a unit
+  # of type $1 to "own buffer" as (see unit_additional_buffer_options).
+  case "$1" in
+    "OpenAMS") printf 'FPS_PSF' ;;
+    *) printf 'TurtleNeck' ;;
+  esac
+}
+
+unit_additional_buffer_type_valid() {
+  # True (0) if $2 is one of $1's unit_additional_buffer_options.
+  local installation_type="$1" buffer_type="$2" opt
+  for opt in $(unit_additional_buffer_options "$installation_type"); do
+    [ "$opt" == "$buffer_type" ] && return 0
+  done
+  return 1
+}
+
 unit_key_for_type() {
   # Echoes the registry key for a given installation_type, or nothing if
   # the type is unknown.
@@ -117,12 +143,20 @@ unit_key_for_type() {
 }
 
 unit_additional_default_name() {
-  # Echoes the default unit name for the "add additional unit" prompt.
-  local template prefix n
+  # Echoes the default unit name for the "add additional unit" prompt: the
+  # lowest free "<prefix>_N" for type $1, probed against what's already in
+  # $afc_config_dir.
+  local template prefix n probe
   template="${UNIT_ADDITIONAL_DEFAULT_NAME[$1]:-Unit_1}"
   prefix="${template%_*}"
   n=1
-  while [ -f "${afc_config_dir}/AFC_${prefix}_${n}.cfg" ]; do
+  while true; do
+    if [ "$1" == "HTLF" ]; then
+      probe="${afc_config_dir}/AFC_$(htlf_normalize_board_type "$htlf_board_type")_${prefix}_${n}.cfg"
+    else
+      probe="${afc_config_dir}/AFC_${prefix}_${n}.cfg"
+    fi
+    [ -f "$probe" ] || break
     n=$((n + 1))
   done
   printf '%s_%s' "$prefix" "$n"

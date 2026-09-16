@@ -27,6 +27,10 @@
 #                                  unit_additional_default_name()'s result -- the
 #                                  lowest free "<prefix>_N" default name offered by
 #                                  the "add additional unit" menu.
+# MODE=additional_buffer_options -> dumps unit_additional_buffer_supported /
+#                                  unit_additional_buffer_options /
+#                                  unit_additional_buffer_default for
+#                                  CASE_installation_type
 # MODE=no_adapter_survival    -> runs under `set -e` (unlike every other mode) and calls
 #                                  each unit_* dispatcher plus print_unit_art for a type
 #                                  with no registered adapter. install-afc.sh itself runs
@@ -106,6 +110,16 @@ case "${MODE:-}" in
     echo "=== NAME ==="
     unit_additional_default_name "$installation_type"
     echo
+    ;;
+  additional_buffer_options)
+    echo "=== VARS ==="
+    if unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")"; then
+      printf 'supported=True\n'
+    else
+      printf 'supported=False\n'
+    fi
+    printf 'options=%s\n' "$(unit_additional_buffer_options "$installation_type")"
+    printf 'default=%s\n' "$(unit_additional_buffer_default "$installation_type")"
     ;;
   buffer_target)
     get_unit_buffer_target

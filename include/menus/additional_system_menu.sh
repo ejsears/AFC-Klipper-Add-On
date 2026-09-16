@@ -13,6 +13,19 @@ additional_buffer_label() {
   esac
 }
 
+cycle_in_list() {
+  local list="$1" current="$2" item prev=""
+  for item in $list; do
+    if [ "$prev" == "$current" ]; then
+      printf '%s' "$item"
+      return
+    fi
+    prev="$item"
+  done
+  set -- $list
+  printf '%s' "$1"
+}
+
 additional_system_menu() {
   local message
   local choice
@@ -35,8 +48,8 @@ additional_system_menu() {
   # installer's default); the user opts out to a shared one with the "B"
   # row below.
   additional_buffer_type="$buffer_type"
-  if [ "$additional_buffer_type" == "None" ]; then
-    additional_buffer_type="TurtleNeck"
+  if ! unit_additional_buffer_type_valid "$installation_type" "$additional_buffer_type" || [ "$additional_buffer_type" == "None" ]; then
+    additional_buffer_type="$(unit_additional_buffer_default "$installation_type")"
   fi
   counter=0
   board_counter=0
@@ -81,9 +94,14 @@ additional_system_menu() {
         # Set the installation type to the current option
         installation_type="${installation_options[$counter]}"
 
-        # Buffer selection isn't offered for every type.
+        # Buffer selection isn't offered for every type, and where it is,
+        # not every type offers the same choices (see
+        # unit_additional_buffer_options) -- don't leave a selection in
+        # place that's invalid, or unreachable, for the new type.
         if ! unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")"; then
           additional_buffer_type="None"
+        elif ! unit_additional_buffer_type_valid "$installation_type" "$additional_buffer_type"; then
+          additional_buffer_type="$(unit_additional_buffer_default "$installation_type")"
         fi
 
         # Update the message
@@ -91,7 +109,7 @@ additional_system_menu() {
         export message ;;
       B)
         if unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")"; then
-          additional_buffer_type=$(case "$additional_buffer_type" in "TurtleNeck") echo "TurtleNeckV2";; "TurtleNeckV2") echo "FPS_PSF";; "FPS_PSF") echo "None";; "None"|*) echo "TurtleNeck";; esac)
+          additional_buffer_type="$(cycle_in_list "$(unit_additional_buffer_options "$installation_type")" "$additional_buffer_type")"
           message="Unit has its own buffer? $(additional_buffer_label "$additional_buffer_type")"
           export message
         fi ;;

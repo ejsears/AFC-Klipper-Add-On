@@ -182,12 +182,31 @@ def iter_cases():
         }
         yield f"additional_default_name__BoxTurtle_4Lane__{case_label}", "additional_default_name", overrides
 
-    # And one non-BoxTurtle type, to confirm the same counting logic applies
-    # generically (not just to the reported BoxTurtle case).
+    # HTLF's filename also carries its (normalized) board type --
+    # AFC_<board>_<name>.cfg, e.g. AFC_ERB_HTLF_1.cfg -- unlike every other
+    # type's plain AFC_<prefix>_<n>.cfg. Probing the generic pattern here
+    # would never find an existing HTLF unit and would keep offering
+    # "HTLF_1" as the default even when it's already taken.
     yield (
-        "additional_default_name__HTLF__first-existing",
+        "additional_default_name__HTLF__board-ERB__first-existing",
         "additional_default_name",
-        {"installation_type": "HTLF", "seed_files": "AFC_HTLF_1.cfg"},
+        {
+            "installation_type": "HTLF",
+            "htlf_board_type": "ERB",
+            "seed_files": "AFC_ERB_HTLF_1.cfg",
+        },
+    )
+    # MMB_1.0/MMB_1.1 both normalize to the "MMB" filename segment (see
+    # htlf_normalize_board_type) -- confirm the probe uses that normalized
+    # form, not the raw htlf_board_type value.
+    yield (
+        "additional_default_name__HTLF__board-MMB_1.0__first-existing",
+        "additional_default_name",
+        {
+            "installation_type": "HTLF",
+            "htlf_board_type": "MMB_1.0",
+            "seed_files": "AFC_MMB_HTLF_1.cfg",
+        },
     )
 
 
@@ -253,6 +272,37 @@ try:
         # registry.sh's "how to add a new unit type" steps 3-4).
         actual = run_case("no_adapter_survival", {})
         assert actual == "still alive\n"
+
+    def test_openams_offers_additional_unit_buffer():
+        # CodeRabbit flagged that OpenAMS was left out of
+        # UNIT_ADDITIONAL_BUFFER_SAFE despite having a working
+        # unit_buffer_target_OpenAMS and FPS_PSF pin handling in
+        # apply_unit_buffer -- confirm it's supported, and that its cycle
+        # is restricted to None/FPS_PSF (it has no TurtleNeck/TurtleNeckV2
+        # hardware path, unlike every other supported type).
+        actual = run_case("additional_buffer_options", {"installation_type": "OpenAMS"})
+        assert actual == (
+            "=== VARS ===\n"
+            "supported=True\n"
+            "options=None FPS_PSF\n"
+            "default=FPS_PSF\n"
+        )
+
+    def test_generic_type_offers_full_additional_unit_buffer_cycle():
+        actual = run_case(
+            "additional_buffer_options", {"installation_type": "BoxTurtle (4-Lane)"}
+        )
+        assert actual == (
+            "=== VARS ===\n"
+            "supported=True\n"
+            "options=None TurtleNeck TurtleNeckV2 FPS_PSF\n"
+            "default=TurtleNeck\n"
+        )
+
+    def test_vivid_has_no_additional_unit_buffer():
+        # ViViD has no unit_buffer_target_ViViD adapter at all.
+        actual = run_case("additional_buffer_options", {"installation_type": "ViViD"})
+        assert actual.splitlines()[1] == "supported=False"
 
 except ImportError:
     pass
