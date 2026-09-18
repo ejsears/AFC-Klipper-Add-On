@@ -30,6 +30,7 @@ additional_system_menu() {
   local message
   local choice
   local counter board_counter qb_board_counter qb_motor_counter
+  local previous_installation_type
   if ! check_existing_unit_installed; then
     echo ""
     echo "No existing unit installation found in ${afc_config_dir}."
@@ -48,7 +49,9 @@ additional_system_menu() {
   # installer's default); the user opts out to a shared one with the "B"
   # row below.
   additional_buffer_type="$buffer_type"
-  if ! unit_additional_buffer_type_valid "$installation_type" "$additional_buffer_type" || [ "$additional_buffer_type" == "None" ]; then
+  if ! unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")"; then
+    additional_buffer_type="None"
+  elif [ "$additional_buffer_type" == "None" ] || ! unit_additional_buffer_type_valid "$installation_type" "$additional_buffer_type"; then
     additional_buffer_type="$(unit_additional_buffer_default "$installation_type")"
   fi
   counter=0
@@ -88,21 +91,17 @@ additional_system_menu() {
 
     case $choice in
       T)
+        # Capture the type we're leaving before switching --
+        # unit_additional_buffer_type_after_transition needs both.
+        previous_installation_type="$installation_type"
+
         # Increment the counter and reset if it exceeds the array length
         counter=$(( (counter + 1) % ${#installation_options[@]} ))
 
         # Set the installation type to the current option
         installation_type="${installation_options[$counter]}"
 
-        # Buffer selection isn't offered for every type, and where it is,
-        # not every type offers the same choices (see
-        # unit_additional_buffer_options) -- don't leave a selection in
-        # place that's invalid, or unreachable, for the new type.
-        if ! unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")"; then
-          additional_buffer_type="None"
-        elif ! unit_additional_buffer_type_valid "$installation_type" "$additional_buffer_type"; then
-          additional_buffer_type="$(unit_additional_buffer_default "$installation_type")"
-        fi
+        additional_buffer_type="$(unit_additional_buffer_type_after_transition "$previous_installation_type" "$installation_type" "$additional_buffer_type")"
 
         # Update the message
         message="Installation Type: $installation_type"

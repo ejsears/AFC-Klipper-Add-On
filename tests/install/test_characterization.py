@@ -304,6 +304,60 @@ try:
         actual = run_case("additional_buffer_options", {"installation_type": "ViViD"})
         assert actual.splitlines()[1] == "supported=False"
 
+    def test_additional_buffer_forced_none_does_not_survive_unsupported_type():
+        # CodeRabbit: cycling "T" through an unsupported type (e.g. ViViD)
+        # forces additional_buffer_type to "None". That forced "None" used
+        # to be indistinguishable from an intentional shared-buffer choice,
+        # so cycling on to the next *supported* type kept "None" instead of
+        # resetting to that type's own-buffer default.
+        actual = run_case(
+            "additional_buffer_transition",
+            {
+                "old_installation_type": "ViViD",
+                "installation_type": "HTLF",
+                "current_buffer_type": "None",
+            },
+        )
+        assert actual == "=== VARS ===\nresult=TurtleNeck\n"
+
+    def test_additional_buffer_none_survives_between_supported_types():
+        # An explicit "None" (shared buffer) chosen on a *supported* type
+        # must survive switching to another supported type -- only a
+        # forced "None" from an unsupported type gets overwritten.
+        actual = run_case(
+            "additional_buffer_transition",
+            {
+                "old_installation_type": "BoxTurtle (4-Lane)",
+                "installation_type": "HTLF",
+                "current_buffer_type": "None",
+            },
+        )
+        assert actual == "=== VARS ===\nresult=None\n"
+
+    def test_additional_buffer_resets_for_unsupported_type():
+        actual = run_case(
+            "additional_buffer_transition",
+            {
+                "old_installation_type": "BoxTurtle (4-Lane)",
+                "installation_type": "ViViD",
+                "current_buffer_type": "TurtleNeck",
+            },
+        )
+        assert actual == "=== VARS ===\nresult=None\n"
+
+    def test_additional_buffer_resets_when_invalid_for_new_type():
+        # TurtleNeck isn't in OpenAMS's cycle (None/FPS_PSF only) -- must
+        # fall back to OpenAMS's own default, not carry TurtleNeck over.
+        actual = run_case(
+            "additional_buffer_transition",
+            {
+                "old_installation_type": "BoxTurtle (4-Lane)",
+                "installation_type": "OpenAMS",
+                "current_buffer_type": "TurtleNeck",
+            },
+        )
+        assert actual == "=== VARS ===\nresult=FPS_PSF\n"
+
 except ImportError:
     pass
 

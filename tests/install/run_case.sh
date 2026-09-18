@@ -31,6 +31,11 @@
 #                                  unit_additional_buffer_options /
 #                                  unit_additional_buffer_default for
 #                                  CASE_installation_type
+# MODE=additional_buffer_transition -> dumps
+#                                  unit_additional_buffer_type_after_transition()
+#                                  for CASE_old_installation_type ->
+#                                  CASE_installation_type, starting from
+#                                  CASE_current_buffer_type
 # MODE=no_adapter_survival    -> runs under `set -e` (unlike every other mode) and calls
 #                                  each unit_* dispatcher plus print_unit_art for a type
 #                                  with no registered adapter. install-afc.sh itself runs
@@ -120,6 +125,10 @@ case "${MODE:-}" in
     fi
     printf 'options=%s\n' "$(unit_additional_buffer_options "$installation_type")"
     printf 'default=%s\n' "$(unit_additional_buffer_default "$installation_type")"
+    ;;
+  additional_buffer_transition)
+    echo "=== VARS ==="
+    printf 'result=%s\n' "$(unit_additional_buffer_type_after_transition "$old_installation_type" "$installation_type" "$current_buffer_type")"
     ;;
   buffer_target)
     get_unit_buffer_target

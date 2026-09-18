@@ -136,6 +136,20 @@ unit_additional_buffer_type_valid() {
   return 1
 }
 
+unit_additional_buffer_type_after_transition() {
+  local old_type="$1" new_type="$2" current="$3"
+  if ! unit_additional_buffer_supported "$(unit_key_for_type "$new_type")"; then
+    printf 'None'
+    return
+  fi
+  if ! unit_additional_buffer_supported "$(unit_key_for_type "$old_type")" \
+    || ! unit_additional_buffer_type_valid "$new_type" "$current"; then
+    unit_additional_buffer_default "$new_type"
+    return
+  fi
+  printf '%s' "$current"
+}
+
 unit_key_for_type() {
   # Echoes the registry key for a given installation_type, or nothing if
   # the type is unknown.
