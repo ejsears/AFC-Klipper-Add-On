@@ -113,6 +113,16 @@ additional_system_menu() {
           message="Claymore Board Type: $htlf2_board_type"
           export message
         fi ;;
+      J)
+        # Increment the counter and reset if it exceeds the array length
+        board_counter=$(( (board_counter + 1) % ${#nightowl_board_types[@]} ))
+
+        # Set the installation type to the current option
+        nightowl_board_type="${nightowl_board_types[$board_counter]}"
+
+        # Update the message
+        message="NightOwl Board Type: $nightowl_board_type"
+        export message ;;
       1)
         name_additional_unit
         export message ;;

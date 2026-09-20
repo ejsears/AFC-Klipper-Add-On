@@ -149,6 +149,8 @@ install_menu() {
         fi ;;
       D)
         cycle_array htlf_board_types board_counter htlf_board_type "HTLF Board Type" ;;
+      J)
+        cycle_array nightowl_board_types board_counter nightowl_board_type "NightOwl Board Type" ;;
       E)
         cycle_array qb_board_types board_counter qb_board_type "QuattroBox Board Type" ;;
       F)
