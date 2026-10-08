@@ -473,14 +473,20 @@ unit_install_additional_Claymore() {
   safe_copy "${afc_path}/config/mcu/AFC_Lite_Claymore.cfg" "${afc_config_dir}/mcu/"
   safe_copy "${afc_path}/templates/AFC_Claymore_1-${board_type}.cfg" "${afc_config_dir}/AFC_${boxturtle_name}.cfg"
   sed -i "s/Claymore_1/$boxturtle_name/g" "${afc_config_dir}/AFC_${boxturtle_name}.cfg"
+  sed -i "s/Claymore_buffer/${boxturtle_name}_buffer/g" "${afc_config_dir}/AFC_${boxturtle_name}.cfg"
 }
 
 unit_buffer_target_Claymore() {
   buffer_unit_name="$boxturtle_name"
   buffer_unit_section_prefix="AFC_Claymore"
   buffer_extruder_file="${afc_config_dir}/AFC_${boxturtle_name}.cfg"
-  buffer_prebaked_header="[AFC_buffer Claymore_buffer]"
-  buffer_section_name="Claymore_buffer"
+  if [ "$is_additional_unit" == "True" ]; then
+    buffer_prebaked_header="[AFC_buffer ${boxturtle_name}_buffer]"
+    buffer_section_name="${boxturtle_name}_buffer"
+  else
+    buffer_prebaked_header="[AFC_buffer Claymore_buffer]"
+    buffer_section_name="Claymore_buffer"
+  fi
 }
 
 unit_message_Claymore() {

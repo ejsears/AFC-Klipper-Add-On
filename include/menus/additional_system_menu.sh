@@ -167,15 +167,26 @@ additional_system_menu() {
       I)
         verify_name_not_in_use ${boxturtle_name}
         if [ "$invalid_name" == "False" ]; then
+          shared_buffer_name=""
+          if unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")" && [ "$additional_buffer_type" == "None" ]; then
+            prompt_shared_buffer_name
+          fi
           install_additional_unit
-          if unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")" && [ "$additional_buffer_type" != "None" ]; then
+          if unit_additional_buffer_supported "$(unit_key_for_type "$installation_type")"; then
             is_additional_unit="True"
-            apply_unit_buffer "$additional_buffer_type"
+            if [ "$additional_buffer_type" != "None" ]; then
+              apply_unit_buffer "$additional_buffer_type"
+            elif [ -n "$shared_buffer_name" ]; then
+              apply_shared_buffer "$shared_buffer_name"
+            fi
             is_additional_unit="False"
           fi
           message="${boxturtle_name} created successfully, please look over config file and update lane numbers."
           message+="\nAdditionally, please ensure any MCU connections are updated in the appropriate files (CANBus, serial, etc)"
           message+="\nThis is not a 100% turn-key solution and will require some manual configuration based on your specific setup."
+          if [ -n "$shared_buffer_name" ]; then
+            message+="\n\n${boxturtle_name} is set to share the existing buffer '${shared_buffer_name}'."
+          fi
           if [ "$additional_buffer_type" == "TurtleNeckV2" ]; then
             message+="\n\nEnsure you add the correct serial information to the ${afc_config_dir}/mcu/TurtleNeckv2.cfg file"
           fi

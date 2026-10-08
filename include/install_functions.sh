@@ -139,6 +139,19 @@ apply_unit_buffer() {
   add_buffer_to_extruder "$buffer_extruder_file" "$buffer_section_name" "$buffer_unit_name" "$buffer_unit_section_prefix"
 }
 
+apply_shared_buffer() {
+  # Points the current unit's `buffer:` line at an existing buffer section.
+  # Arguments:
+  #   $1: shared_buffer_name - name of the existing [AFC_buffer <name>] section.
+  local shared_buffer_name="$1"
+  get_unit_buffer_target
+  if [ -z "$buffer_unit_name" ]; then
+    print_msg WARNING "No unit target is known for installation type '${installation_type}'; skipping."
+    return 0
+  fi
+  add_buffer_to_extruder "$buffer_extruder_file" "$shared_buffer_name" "$buffer_unit_name" "$buffer_unit_section_prefix"
+}
+
 install_afc() {
   # This is always the first unit -- additional_system_menu.sh sets
   # is_additional_unit="True" itself
