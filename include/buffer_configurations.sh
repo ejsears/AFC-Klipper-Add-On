@@ -238,6 +238,25 @@ prompt_shared_buffer_name() {
   done
 }
 
+remove_buffer_section() {
+  # Removes one [AFC_buffer <name>] section (header through its body and one
+  # trailing blank line) from a config file. Commented lines are untouched.
+  # Arguments:
+  #   $1: file_path - The path to the configuration file containing the block.
+  #   $2: section_header - The exact header line, e.g. "[AFC_buffer Claymore_2_buffer]".
+  local file_path="$1"
+  local section_header="$2"
+
+  awk -v header="$section_header" '
+    BEGIN { in_section = 0 }
+    $0 == header { in_section = 1; next }
+    in_section && /^$/ { in_section = 0; next }
+    in_section && /^\[.+\]/ { in_section = 0 }
+    in_section { next }
+    { print $0 }
+  ' "$file_path" > "$file_path.tmp" && mv "$file_path.tmp" "$file_path"
+}
+
 query_tn_pins() {
   # Function to query the user for the TurtleNeck pins.
   # Arguments:

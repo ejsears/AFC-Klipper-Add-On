@@ -140,7 +140,8 @@ apply_unit_buffer() {
 }
 
 apply_shared_buffer() {
-  # Points the current unit's `buffer:` line at an existing buffer section.
+  # Points the current unit's `buffer:` line at an existing buffer section and
+  # drops the unit's now-unused pre-baked buffer section, if it has one.
   # Arguments:
   #   $1: shared_buffer_name - name of the existing [AFC_buffer <name>] section.
   local shared_buffer_name="$1"
@@ -150,6 +151,9 @@ apply_shared_buffer() {
     return 0
   fi
   add_buffer_to_extruder "$buffer_extruder_file" "$shared_buffer_name" "$buffer_unit_name" "$buffer_unit_section_prefix"
+  if [ -n "$buffer_prebaked_header" ] && [ "$buffer_prebaked_header" != "[AFC_buffer ${shared_buffer_name}]" ]; then
+    remove_buffer_section "$buffer_extruder_file" "$buffer_prebaked_header"
+  fi
 }
 
 install_afc() {

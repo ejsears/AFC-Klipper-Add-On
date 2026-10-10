@@ -120,6 +120,34 @@ class TestPromptSharedBufferName:
         assert "set 'buffer:' manually." in out.stdout
 
 
+class TestRemoveBufferSection:
+    SRC = "[A x]\na: 1\n\n[AFC_buffer Gone]\nb: 2\n\n#[AFC_buffer Gone]\n[AFC_buffer Kept]\nc: 3\n"
+
+    def run(self, src: str, header: str) -> str:
+        body = (
+            seed("f.cfg::" + src)
+            + f'\nremove_buffer_section "$afc_config_dir/f.cfg" {shlex.quote(header)}'
+            + '\ncat "$afc_config_dir/f.cfg"'
+        )
+        return run_bash(body).stdout
+
+    def test_removes_header_body_and_one_blank_line(self) -> None:
+        out = self.run(self.SRC, "[AFC_buffer Gone]")
+        assert out == "[A x]\na: 1\n\n#[AFC_buffer Gone]\n[AFC_buffer Kept]\nc: 3\n"
+
+    def test_stops_at_next_section_header_without_blank_line(self) -> None:
+        out = self.run("[AFC_buffer Gone]\nb: 2\n[AFC_buffer Kept]\nc: 3\n", "[AFC_buffer Gone]")
+        assert out == "[AFC_buffer Kept]\nc: 3\n"
+
+    def test_missing_header_leaves_file_unchanged(self) -> None:
+        out = self.run(self.SRC, "[AFC_buffer Nope]")
+        assert out == self.SRC
+
+    def test_section_at_end_of_file(self) -> None:
+        out = self.run("[A x]\na: 1\n\n[AFC_buffer Gone]\nb: 2\n", "[AFC_buffer Gone]")
+        assert out == "[A x]\na: 1\n\n"
+
+
 class TestApplySharedBuffer:
     def test_replaces_existing_buffer_line_for_claymore(self) -> None:
         body = r"""
@@ -132,8 +160,37 @@ cat "$afc_config_dir/AFC_Claymore_2.cfg"
         out = run_bash(body).stdout
         assert out.count("buffer: Claymore_buffer\n") == 1
         assert "buffer: Claymore_2_buffer\n" not in out
-        # The unit's own pre-baked section is still named for the unit
-        assert "[AFC_buffer Claymore_2_buffer]" in out
+        assert "[AFC_buffer Claymore_2_buffer]" not in out
+        assert "Claymore_2:ADV" not in out
+        # Neighbouring sections are untouched
+        assert "[AFC_hub Claymore_2]\n" in out
+        assert "[AFC_led Claymore_Indicator_1]\n" in out
+
+    def test_removes_prebaked_section_for_quattrobox(self) -> None:
+        body = r"""
+installation_type="QuattroBox"; boxturtle_name="QB_2"; is_additional_unit="True"
+qb_board_type="MMB_1.1"; qb_motor_type="NEMA_14"
+install_additional_unit
+apply_shared_buffer "QuattroBox_1"
+cat "$afc_config_dir/AFC_QB_2.cfg"
+"""
+        out = run_bash(body).stdout
+        assert "[AFC_buffer QB_2]" not in out
+        assert "<insert_advance_pin>" not in out
+        assert "buffer: QuattroBox_1" in out
+        assert "[AFC_QuattroBox QB_2]\n" in out
+
+    def test_keeps_prebaked_section_when_shared_name_matches_it(self) -> None:
+        body = r"""
+installation_type="Claymore"; boxturtle_name="Claymore_2"; is_additional_unit="True"
+htlf2_board_type="AFC_Lite"
+install_additional_unit
+apply_shared_buffer "Claymore_2_buffer"
+cat "$afc_config_dir/AFC_Claymore_2.cfg"
+"""
+        out = run_bash(body).stdout
+        assert out.count("[AFC_buffer Claymore_2_buffer]\n") == 1
+        assert "buffer: Claymore_2_buffer\n" in out
 
     def test_inserts_buffer_line_when_template_has_only_placeholder(self) -> None:
         body = r"""
