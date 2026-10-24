@@ -27,7 +27,7 @@ UNINSTALLED_TEXT = (
     "\n  AFC has been uninstalled successfully.\n\n"
     "  Please restart your printer to complete the uninstallation process.\n\n"
     "  We always welcome feedback on the software on our Discord channel at\n\n"
-    "  https://discord.gg/armoredturtle.\n  "
+    "  https://discord.gg/z2tgWEnfDT.\n  "
 )
 
 
